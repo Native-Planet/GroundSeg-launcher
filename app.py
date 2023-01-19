@@ -1,6 +1,6 @@
 import customtkinter as ct
 import time
-from pages import InstallPage, InstallingPage, FixPage, LauncherPage
+from pages import InstallPage, InstallingPage, FixPage, LauncherPage, Control
 from utils import Utils
 from threading import Thread
 
@@ -44,6 +44,9 @@ class MainApp(ct.CTk):
 
         if page == 'launcher':
             self.current_frame = LauncherPage
+
+        if page == 'control':
+            self.current_frame = Control
 
         self.current_frame(self).place(relx=0.5, rely=0.5, anchor=ct.CENTER)
 
