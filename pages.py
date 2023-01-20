@@ -156,7 +156,7 @@ class Control(ct.CTkFrame):
         ports = ''.join(map(lambda x: f',hostfwd=tcp::{x}-:{x}',range(8081,8100)))
         cmd = ' '.join(['echo',self.password,'|','sudo','-S',
                        vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",
-                       '-nic','user,hostfwd=tcp::81-:80,hostfwd=tcp::27016-:27016' + ports,
+                       '-nic','user,hostfwd=tcp::80-:80,hostfwd=tcp::27016-:27016' + ports,
                        '-accel','kvm','-display','none', '-pidfile', pid,'-daemonize'])
         subprocess.Popen(cmd,shell=True)
         # Switch frame
@@ -170,7 +170,7 @@ class Control(ct.CTkFrame):
         master.switch_frame('launcher')
     
     def open_groundseg(self):
-        webbrowser.open(f"http://{socket.gethostname()}.local:81")
+        webbrowser.open(f"http://{socket.gethostname()}.local")
 
 
 class LauncherPage(ct.CTkFrame):
@@ -237,7 +237,7 @@ class LauncherPage(ct.CTkFrame):
             ports = ''.join(map(lambda x: f',hostfwd=tcp::{x}-:{x}',range(8081,8100)))
             cmd = ' '.join(['echo',master.password,'|','sudo','-S',
                             vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",
-                            '-nic','user,hostfwd=tcp::81-:80,hostfwd=tcp::27016-:27016' + ports,
+                            '-nic','user,hostfwd=tcp::80-:80,hostfwd=tcp::27016-:27016' + ports,
                             '-accel','kvm','-pidfile', pid,'-daemonize','-display','none'])
             subprocess.Popen(cmd,shell=True)
             master.switch_frame('launching')

@@ -92,7 +92,7 @@ class MainApp(ct.CTk):
             while self.launching:
                 name = socket.gethostname()
                 try:
-                    r = requests.get(f"http://{name}.local:81")
+                    r = requests.get(f"http://{name}.local")
                     if r.status_code == 200:
                         self.launching = False
                         self.switch_frame('control')

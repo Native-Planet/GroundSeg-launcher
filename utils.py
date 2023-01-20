@@ -1,15 +1,14 @@
 import os
+import json
 import time
 import tarfile
 import requests
 from threading import Thread
 
 class Utils:
-    #install_dir = f'/Users/{os.environ["USER"]}/Documents/groundseg'
+    install_dir = f'/Users/{os.environ["USER"]}/Documents/groundseg'
+    dl_addr = "https://2333367189d562c7da7650ec610d55a0.r2.cloudflarestorage.com/groundseg"
 
-    # temp
-    install_dir = f'/home/nal/gsl_files'
-    dl_addr = "http://localhost"
     installing = False
     fixing = False
 
