@@ -1,4 +1,5 @@
 import customtkinter as ct
+import subprocess
 import psutil
 import json
 import os
@@ -13,15 +14,25 @@ class InstallPage(ct.CTkFrame):
             master.switch_frame('installing')
 
         # Title
-        l_text = "GroundSeg is not installed"
-        lbl = ct.CTkLabel(self,text=l_text)
+        l_text = "GroundSeg is not detected on your device."
+        lbl = ct.CTkLabel(self,text=l_text, font=(None, 16))
 
         # Install button
-        b_text = "Install"
-        b_rad = 12
-        c = "#008EFF"
+        b_text = "Install GroundSeg"
+        b_rad = 100
+        #c = "#008EFF"
+        c = "#FFFFFF"
         cmd = install_groundseg
-        btn = ct.CTkButton(self,text=b_text,corner_radius=b_rad,border_color=c,fg_color=c,command=cmd)
+        btn = ct.CTkButton(self,
+                           text=b_text,
+                           corner_radius=b_rad,
+                           border_color=c,
+                           border_width=2,
+                           width=240,
+                           border_spacing=12,
+                           fg_color="transparent",
+                           hover_color=c,
+                           command=cmd)
 
         # Pack
         lbl.place(relx=0.5, rely=0.4, anchor=ct.CENTER)
@@ -51,9 +62,12 @@ class FixPage(ct.CTkFrame):
 class InstallingPage(ct.CTkFrame):
     def __init__(self, master):
         ct.CTkFrame.__init__(self, master, fg_color="transparent", width=master.w_width, height=master.w_height)
-        l_text = "Please be patient while we install GroundSeg..."
-        lbl = ct.CTkLabel(self,text=l_text)
-        lbl.place(relx=0.5, rely=0.5, anchor=ct.CENTER)
+        l_text = "GroundSeg is installing..."
+        p_text = "Please be patient"
+        lbl = ct.CTkLabel(self,text=l_text, font=(None, 14))
+        p_lbl = ct.CTkLabel(self,text=p_text, font=(None, 10))
+        lbl.place(relx=0.5, rely=0.4, anchor=ct.CENTER)
+        p_lbl.place(relx=0.5, rely=0.6, anchor=ct.CENTER)
 
 class Control(ct.CTkFrame):
     def __init__(self, master):
@@ -112,7 +126,7 @@ class LauncherPage(ct.CTkFrame):
                                       corner_radius=20,
                                       border_spacing=6,
                                       hover_color=white,
-                                      command=lambda: self.start_groundseg(master))
+                                      command=lambda: self.prompt_password(master))
     def to_basic(self):
         self.tab_btn.configure(text='Go to Advanced Menu',command=self.to_adv)
         self.tab_btn.place(relx=0.2,rely=0.9,anchor=ct.CENTER)
@@ -125,8 +139,12 @@ class LauncherPage(ct.CTkFrame):
         self.visible_page = AdvancedPage(self,self.content_width,self.content_height)
         self.visible_page.place(relx=0.5,rely=0,anchor=ct.N)
 
+    def prompt_password(self, master):
+        dialog = ct.CTkInputDialog(text="Admin Password:", title="Password")
+        self.start_groundseg(master, dialog.get_input())
+
     # Start GroundSeg
-    def start_groundseg(self, master):
+    def start_groundseg(self, master, password):
         rz_res = self.resize.set_size(self.default_hdd)
         if rz_res[0]:
             with open(self.config_file, "w") as f:
@@ -134,11 +152,17 @@ class LauncherPage(ct.CTkFrame):
                 f.close()
 
             # qemu command
-            print("qemu-system-x64_86 ...")
-            # check if everything started correctly
-            if True:
-                master.switch_frame('control')
-
+            vm_bin = f"{master.u.install_dir}/qemu-binaries/qemu-system-x86_64"
+            vm_img = f"{master.u.install_dir}/groundseg.qcow2"
+            ports = ''.join(map(lambda x: f',hostfwd=tcp::{x}-:{x}',range(8081,8100)))
+            cmd = [ 'echo',password,'|','sudo','-S',
+                    vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",
+                   '-nic','user,hostfwd=tcp::80-:80,hostfwd=tcp::27016-:27016' + ports,
+                   '-accel','kvm','-display','none','-daemonize']
+            x = subprocess.check_output(cmd, shell=True)
+            print(x)
+            master.switch_frame('control')
+            #master.switch_frame('launching')
         else:
             print(f"ERROR STARTING QEMU: {rz_res[1]}")
 
