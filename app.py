@@ -1,6 +1,9 @@
 import customtkinter as ct
+import os
 import time
-from pages import InstallPage, InstallingPage, FixPage, LauncherPage, Control
+import requests
+import socket
+from pages import InstallPage, InstallingPage, FixPage, FixingPage, LaunchingPage, LauncherPage, Control
 from utils import Utils
 from threading import Thread
 
@@ -20,15 +23,22 @@ class MainApp(ct.CTk):
         self.title("GroundSeg Launcher")
 
         # Frame switcher
+        self.launching = False
         self.current_frame = None
-        self.switch_frame(self.make_valid_frame())
+        if os.path.isfile(f"{self.u.install_dir}/pid"):
+            page = 'control'
+        else:
+            page = self.make_valid_frame()
+        self.switch_frame(page)
 
     def make_valid_frame(self):
         valid = self.u.valid_page()
-        # do background stuff here
+        print(f"Missing packages: {valid[1]}")
+        self.u.packages = valid[1]
         return valid[0]
 
     def switch_frame(self, page):
+        print(page)
         if self.current_frame:
             self.current_frame(self).destroy()
 
@@ -42,15 +52,26 @@ class MainApp(ct.CTk):
             self.current_frame = InstallingPage
             self.u.installing = True
 
+        if page == 'fixing':
+            self.current_frame = FixingPage
+            self.u.fixing = True
+
+        if page == 'launching':
+            self.launching = True
+            self.current_frame = LaunchingPage
+
+        if page == 'control' or os.path.isfile(f"{self.u.install_dir}/pid"):
+            self.current_frame = Control
+
         if page == 'launcher':
             self.current_frame = LauncherPage
 
-        if page == 'control':
-            self.current_frame = Control
 
         self.current_frame(self).place(relx=0.5, rely=0.5, anchor=ct.CENTER)
 
         Thread(target=self.check_installing, daemon=True).start()
+        Thread(target=self.check_fixing, daemon=True).start()
+        Thread(target=self.check_launching, daemon=True).start()
 
     def check_installing(self):
         if self.u.installing:
@@ -58,6 +79,25 @@ class MainApp(ct.CTk):
                 time.sleep(0.1)
 
             self.switch_frame(self.make_valid_frame())
+
+    def check_fixing(self):
+        if self.u.fixing:
+            while self.u.fixing:
+                time.sleep(0.1)
+
+            self.switch_frame(self.make_valid_frame())
+
+    def check_launching(self):
+        if self.launching:
+            while self.launching:
+                name = socket.gethostname()
+                try:
+                    r = requests.get(f"http://{name}.local:81")
+                    if r.status_code == 200:
+                        self.launching = False
+                        self.switch_frame('control')
+                except Exception as e:
+                    pass
 
 if __name__ == "__main__":
     ct.set_appearance_mode("dark")

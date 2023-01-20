@@ -1,10 +1,15 @@
 import customtkinter as ct
+import webbrowser
+import socket
+import json
 import subprocess
 import psutil
 import json
 import os
+import time
 from threading import Thread
 from resize import ResizeImage
+
 
 class InstallPage(ct.CTkFrame):
     def __init__(self, master):
@@ -43,17 +48,27 @@ class FixPage(ct.CTkFrame):
         ct.CTkFrame.__init__(self, master, fg_color="transparent", width=master.w_width, height=master.w_height)
         def fix_groundseg():
             Thread(target=master.u.fix_groundseg, daemon=True).start()
+            master.switch_frame('fixing')
 
         # Title
         l_text = "GroundSeg is missing required files"
-        lbl = ct.CTkLabel(self,text=l_text)
+        lbl = ct.CTkLabel(self,text=l_text, font=(None, 16))
 
         # Install button
-        b_text = "Fix"
-        b_rad = 12
-        c = "#008EFF"
+        b_text = "Repair"
+        b_rad = 100
+        c = "#FFFFFF"
         cmd = fix_groundseg
-        btn = ct.CTkButton(self,text=b_text,corner_radius=b_rad,border_color=c,fg_color=c,command=cmd)
+        btn = ct.CTkButton(self,
+                           text=b_text,
+                           corner_radius=b_rad,
+                           border_color=c,
+                           border_width=2,
+                           width=240,
+                           border_spacing=12,
+                           fg_color="transparent",
+                           hover_color=c,
+                           command=cmd)
 
         # Pack
         lbl.place(relx=0.5, rely=0.4, anchor=ct.CENTER)
@@ -69,31 +84,94 @@ class InstallingPage(ct.CTkFrame):
         lbl.place(relx=0.5, rely=0.4, anchor=ct.CENTER)
         p_lbl.place(relx=0.5, rely=0.6, anchor=ct.CENTER)
 
+class FixingPage(ct.CTkFrame):
+    def __init__(self, master):
+        ct.CTkFrame.__init__(self, master, fg_color="transparent", width=master.w_width, height=master.w_height)
+        l_text = "GroundSeg is repairing..."
+        p_text = "Please be patient"
+        lbl = ct.CTkLabel(self,text=l_text, font=(None, 14))
+        p_lbl = ct.CTkLabel(self,text=p_text, font=(None, 10))
+        lbl.place(relx=0.5, rely=0.4, anchor=ct.CENTER)
+        p_lbl.place(relx=0.5, rely=0.6, anchor=ct.CENTER)
+
+class LaunchingPage(ct.CTkFrame):
+    def __init__(self, master):
+        ct.CTkFrame.__init__(self, master, fg_color="transparent", width=master.w_width, height=master.w_height)
+        l_text = "GroundSeg is starting"
+        p_text = "Please be patient"
+        lbl = ct.CTkLabel(self,text=l_text, font=(None, 14))
+        p_lbl = ct.CTkLabel(self,text=p_text, font=(None, 10))
+        lbl.place(relx=0.5, rely=0.4, anchor=ct.CENTER)
+        p_lbl.place(relx=0.5, rely=0.6, anchor=ct.CENTER)
+
 class Control(ct.CTkFrame):
     def __init__(self, master):
         ct.CTkFrame.__init__(self, master, fg_color="transparent", width=master.w_width, height=master.w_height)
 
-        self.make_buttons()
+        self.config_file = f"{master.u.install_dir}/launcher.json"
+        self.make_buttons(master)
         self.place_buttons()
 
-    def make_buttons(self):
-        self.restart = ct.CTkButton(self, text="Restart GroundSeg", command=self.restart_vm)
-        self.stop = ct.CTkButton(self, text="Stop GroundSeg", command=self.stop_vm)
-        self.open = ct.CTkButton(self, text="Open Web UI", command=self.open_groundseg)
+    def make_buttons(self,master):
+        self.restart = self.control_button("Restart GroundSeg", "#F5CA7B", lambda: self.restart_vm(master))
+        self.stop = self.control_button("Stop GroundSeg", "#F47174", lambda: self.stop_vm(master))
+        self.open = ct.CTkButton(self, text="Open Web UI", command=self.open_groundseg,
+                                 fg_color="#008EFF",text_color="#FFFFFF",border_spacing=8,
+                                 font=(None,16),width=480,corner_radius=16,
+                                 height=36)
+
+    def control_button(self,text,color,cmd):
+        return ct.CTkButton(self,text=text,command=cmd,
+                            fg_color="transparent",border_spacing=6, 
+                            text_color=color,border_color=color,
+                            font=(None,14), border_width=1,width=240,
+                            corner_radius=20,hover_color="#FFFFFF")
 
     def place_buttons(self):
-        self.restart.place(relx=0.5,rely=0.3,anchor=ct.CENTER)
-        self.stop.place(relx=0.5,rely=0.5,anchor=ct.CENTER)
-        self.open.place(relx=0.5,rely=0.7,anchor=ct.CENTER)
+        self.restart.place(relx=0.3,rely=0.3,anchor=ct.CENTER)
+        self.stop.place(relx=0.7,rely=0.3,anchor=ct.CENTER)
+        self.open.place(relx=0.5,rely=0.6,anchor=ct.CENTER)
 
-    def restart_vm(self):
-        print("restart")
+    def prompt_password(self, master):
+        self.start_groundseg(master)
 
-    def stop_vm(self):
-        print("stop")
+    def restart_vm(self,master):
+        with open(self.config_file) as f:
+            cfg = json.load(f)
+            self.ram = cfg['ram']
+            self.cpu = cfg['cpu']
+            f.close()
+
+        # Pop up
+        dialog = ct.CTkInputDialog(text="Admin Password:", title="Password")
+        self.password = dialog.get_input()
+        # Stop command
+        cat = f"$(echo $(echo {self.password} | sudo -S cat {master.u.install_dir}/pid))"
+        subprocess.run(f"echo {self.password} | sudo -S kill {cat}", shell=True)
+        time.sleep(3)
+        # Start command
+        vm_bin = f"{master.u.install_dir}/qemu-binaries/qemu-system-x86_64"
+        vm_img = f"{master.u.install_dir}/groundseg.qcow2"
+        pid = f"{master.u.install_dir}/pid"
+        ports = ''.join(map(lambda x: f',hostfwd=tcp::{x}-:{x}',range(8081,8100)))
+        cmd = ' '.join(['echo',self.password,'|','sudo','-S',
+                       vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",
+                       '-nic','user,hostfwd=tcp::81-:80,hostfwd=tcp::27016-:27016' + ports,
+                       '-accel','kvm','-display','none', '-pidfile', pid,'-daemonize'])
+        subprocess.Popen(cmd,shell=True)
+        # Switch frame
+        master.switch_frame('launching')
+
+    def stop_vm(self,master):
+        dialog = ct.CTkInputDialog(text="Admin Password:", title="Password")
+        self.password = dialog.get_input()
+        cat = f"$(echo $(echo {self.password} | sudo -S cat {master.u.install_dir}/pid))"
+        subprocess.run(f"echo {self.password} | sudo -S kill {cat}", shell=True)
+        master.switch_frame('launcher')
     
     def open_groundseg(self):
-        print("open")
+        webbrowser.open(f"http://{socket.gethostname()}.local:81")
+
 
 class LauncherPage(ct.CTkFrame):
     def __init__(self, master):
@@ -141,10 +219,11 @@ class LauncherPage(ct.CTkFrame):
 
     def prompt_password(self, master):
         dialog = ct.CTkInputDialog(text="Admin Password:", title="Password")
-        self.start_groundseg(master, dialog.get_input())
+        master.password = dialog.get_input()
+        self.start_groundseg(master)
 
     # Start GroundSeg
-    def start_groundseg(self, master, password):
+    def start_groundseg(self, master):
         rz_res = self.resize.set_size(self.default_hdd)
         if rz_res[0]:
             with open(self.config_file, "w") as f:
@@ -154,15 +233,14 @@ class LauncherPage(ct.CTkFrame):
             # qemu command
             vm_bin = f"{master.u.install_dir}/qemu-binaries/qemu-system-x86_64"
             vm_img = f"{master.u.install_dir}/groundseg.qcow2"
+            pid = f"{master.u.install_dir}/pid"
             ports = ''.join(map(lambda x: f',hostfwd=tcp::{x}-:{x}',range(8081,8100)))
-            cmd = [ 'echo',password,'|','sudo','-S',
-                    vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",
-                   '-nic','user,hostfwd=tcp::80-:80,hostfwd=tcp::27016-:27016' + ports,
-                   '-accel','kvm','-display','none','-daemonize']
-            x = subprocess.check_output(cmd, shell=True)
-            print(x)
-            master.switch_frame('control')
-            #master.switch_frame('launching')
+            cmd = ' '.join(['echo',master.password,'|','sudo','-S',
+                            vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",
+                            '-nic','user,hostfwd=tcp::81-:80,hostfwd=tcp::27016-:27016' + ports,
+                            '-accel','kvm','-pidfile', pid,'-daemonize','-display','none'])
+            subprocess.Popen(cmd,shell=True)
+            master.switch_frame('launching')
         else:
             print(f"ERROR STARTING QEMU: {rz_res[1]}")
 
@@ -201,11 +279,19 @@ class LauncherPage(ct.CTkFrame):
         # hdd
         self.default_hdd = int(self.free_hdd * 0.8) #GB
 
+        try:
+            with open(self.config_file) as f:
+                cfg = f.json.load()
+                self.ram = cfg['ram']
+                self.cpu = cfg['cpu']
+                f.close()
+        except:
+            self.ram = self.default_ram
+            self.cpu = self.default_cpu
+
 class BasicPage(ct.CTkFrame):
     def __init__(self, master, width, height):
         ct.CTkFrame.__init__(self, master, fg_color="transparent", width=width, height=height)
-        master.ram = master.default_ram
-        master.cpu = master.default_cpu
 
         self.make_widgets(master)
         self.place_widgets()
@@ -238,12 +324,8 @@ class AdvancedPage(ct.CTkFrame):
     def __init__(self, master, width, height):
         ct.CTkFrame.__init__(self, master, fg_color="transparent", width=width, height=height)
 
-        master.ram = master.default_ram
-        master.cpu = master.default_cpu
-
         self.make_widgets(master)
         self.place_widgets()
-
 
     def make_widgets(self, master):
         self.ram_title = ct.CTkLabel(self, text="Maximum RAM Usage (GB)")
@@ -266,7 +348,6 @@ class AdvancedPage(ct.CTkFrame):
         self.ram_sel = ct.CTkComboBox(self,command=set_ram)
         self.ram_sel.configure(variable=shown_val, values=vals)
 
-
     def cpu_select(self, master):
         def set_cpu(v):
             master.cpu = int(v)
@@ -275,7 +356,6 @@ class AdvancedPage(ct.CTkFrame):
         shown_val = ct.StringVar(value=str(master.default_cpu))
         self.cpu_sel = ct.CTkComboBox(self,command=set_cpu)
         self.cpu_sel.configure(variable=shown_val, values=vals)
-
 
     def place_widgets(self):
         # RAM

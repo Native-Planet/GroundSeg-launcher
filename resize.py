@@ -1,6 +1,7 @@
 import guestfs
 import subprocess
 import re
+import socket
 
 class ResizeImage:
 
@@ -34,6 +35,11 @@ class ResizeImage:
         if not gfs_res[0]:
             return gfs_res
 
+        # set hostname
+        h_res = self.set_hostname()
+        if not h_res[0]:
+            return h_res
+
         # get filesystem size
         fss_res = self._fs_size()
         if not fss_res[0]:
@@ -66,6 +72,15 @@ class ResizeImage:
         except Exception as e:
             return (False, e)
         return (True, None)
+    # set hostname
+    def set_hostname(self):
+        try:
+            self.g.mount(self.part,"/")
+            self.g.write("/etc/hostname",socket.gethostname())
+            self.g.umount_all()
+            return (True, None)
+        except Exception as e:
+            return (False, e)
 
     def _fs_size(self):
         try:

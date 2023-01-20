@@ -65,6 +65,35 @@ class Utils:
         # switch displayed page when downloads are completed
         Thread(target=self.install_page_switch, daemon=True).start()
 
+    def fix_groundseg(self):
+        print("Repairing groundseg")
+        self.incomplete = self.packages
+
+        # Start threads
+        if 'image' in self.incomplete:
+            # groundseg image
+            Thread(target=self.download_and_extract,
+                   args=(self.dl_addr, 'groundseg-img.tar.xz','image'),
+                   daemon=True
+                   ).start()
+
+        if 'qemu-bin' in self.incomplete:
+            # qemu binaries
+            Thread(target=self.download_and_extract,
+                   args=(self.dl_addr, 'qemu-bin.tar.xz', 'qemu-bin'),
+                   daemon=True
+                   ).start()
+
+            # qemu source code
+        if 'qemu-src' in self.incomplete:
+            Thread(target=self.download_and_extract,
+                   args=(self.dl_addr, 'qemu-7.2.0.tar.xz', 'qemu-src'),
+                   daemon=True
+                   ).start()
+
+        # switch displayed page when downloads are completed
+        Thread(target=self.install_page_switch, daemon=True).start()
+
     def download_and_extract(self, url, dl_file, file_type):
         # Create directory
         os.makedirs(self.install_dir, exist_ok=True)
@@ -109,32 +138,6 @@ class Utils:
             if len(self.incomplete) < 1:
                 print("Installation completed")
                 self.installing = False
-                break
-            time.sleep(0.1)
-
-    def fix_groundseg(self, to_fix):
-        self.shown = 'fixing'
-        url = "http://localhost"
-        self.incomplete = [to_fix]
-
-        if to_fix == 'image':
-            file_name = 'groundseg-img.tar.xz'
-        else:
-            file_name = 'qemu-bin.tar.xz'
-
-        # Start threads
-        Thread(target=self.download_and_extract,
-               args=(url, file_name, to_fix),
-               daemon=True
-               ).start()
-
-        # switch displayed page when downloads are completed
-        Thread(target=self.fix_page_switch, daemon=True).start()
-        
-    def fix_page_switch(self):
-        while True:
-            if len(self.incomplete) < 1:
-                print("Fix completed")
-                self.shown = 'launcher'
+                self.fixing = False
                 break
             time.sleep(0.1)
