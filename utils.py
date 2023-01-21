@@ -86,7 +86,7 @@ class Utils:
             # qemu source code
         if 'qemu-src' in self.incomplete:
             Thread(target=self.download_and_extract,
-                   args=(self.dl_addr, 'qemu-7.2.0.tar.xz', 'qemu-src'),
+                   args=("https://download.qemu.org/qemu-7.2.0.tar.xz", 'qemu-7.2.0.tar.xz', 'qemu-src'),
                    daemon=True
                    ).start()
 
@@ -94,43 +94,47 @@ class Utils:
         Thread(target=self.install_page_switch, daemon=True).start()
 
     def download_and_extract(self, url, dl_file, file_type):
-        # Create directory
-        os.makedirs(self.install_dir, exist_ok=True)
-
-        def gs_print(msg):
-            print(f"{file_type}: {msg}")
-
-        # Delete file if exists
         try:
-            gs_print(f"Deleting {dl_file}")
-            os.remove(f"{self.install_dir}/{dl_file}")
-        except:
+            # Create directory
+            os.makedirs(self.install_dir, exist_ok=True)
+
+            def gs_print(msg):
+                print(f"{file_type}: {msg}")
+
+            # Delete file if exists
+            try:
+                gs_print(f"Deleting {dl_file}")
+                os.remove(f"{self.install_dir}/{dl_file}")
+            except:
+                pass
+
+            # Download the file
+            gs_print(f"Downloading {dl_file}")
+
+            r = requests.get(f"{url}/{dl_file}", stream=True)
+            r.raise_for_status()
+
+            with open(f"{self.install_dir}/{dl_file}", 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192): 
+                    f.write(chunk)
+
+            # Extract the file
+            gs_print(f"Extracting {dl_file}")
+            with tarfile.open(f"{self.install_dir}/{dl_file}", mode='r:xz') as tar:
+                tar.extractall(path=self.install_dir)
+
+            # Remove tarball
+            try:
+                gs_print(f"Deleting {dl_file}")
+                os.remove(f"{self.install_dir}/{dl_file}")
+            except:
+                pass
+
+            # Set to complete
+            self.incomplete.remove(file_type)
+        except Exception as e:
+            print(e)
             pass
-
-        # Download the file
-        gs_print(f"Downloading {dl_file}")
-
-        r = requests.get(f"{url}/{dl_file}", stream=True)
-        r.raise_for_status()
-
-        with open(f"{self.install_dir}/{dl_file}", 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192): 
-                f.write(chunk)
-
-        # Extract the file
-        gs_print(f"Extracting {dl_file}")
-        with tarfile.open(f"{self.install_dir}/{dl_file}", mode='r:xz') as tar:
-            tar.extractall(path=self.install_dir)
-
-        # Remove tarball
-        try:
-            gs_print(f"Deleting {dl_file}")
-            os.remove(f"{self.install_dir}/{dl_file}")
-        except:
-            pass
-
-        # Set to complete
-        self.incomplete.remove(file_type)
 
     def install_page_switch(self):
         while True:
