@@ -8,7 +8,7 @@ import json
 import os
 import time
 from threading import Thread
-from resize import ResizeImage
+#from resize import ResizeImage
 
 
 class InstallPage(ct.CTkFrame):
@@ -224,8 +224,9 @@ class LauncherPage(ct.CTkFrame):
 
     # Start GroundSeg
     def start_groundseg(self, master):
-        rz_res = self.resize.set_size(self.default_hdd)
-        if rz_res[0]:
+        #rz_res = self.resize.set_size(self.default_hdd)
+        #if rz_res[0]:
+        try:
             with open(self.config_file, "w") as f:
                 json.dump({"ram":self.ram,"cpu":self.cpu}, f, indent = 4)
                 f.close()
@@ -241,8 +242,8 @@ class LauncherPage(ct.CTkFrame):
                             '-accel','hvf','-pidfile', pid,'-daemonize','-display','none'])
             subprocess.Popen(cmd,shell=True)
             master.switch_frame('launching')
-        else:
-            print(f"ERROR STARTING QEMU: {rz_res[1]}")
+        except Exception as e:
+            print(f"ERROR STARTING QEMU: {e}")
 
     def load_values(self, master):
 
@@ -258,7 +259,7 @@ class LauncherPage(ct.CTkFrame):
         self.config_file = f"{master.u.install_dir}/launcher.json"
 
         # init resize class
-        self.resize = ResizeImage(f"{master.u.install_dir}/groundseg.qcow2")
+        #self.resize = ResizeImage(f"{master.u.install_dir}/groundseg.qcow2")
 
         # resources available
         self.total_ram = int(psutil.virtual_memory().total / gb) #GB
@@ -277,7 +278,8 @@ class LauncherPage(ct.CTkFrame):
         self.default_cpu = int(self.total_cpu * 0.8)
 
         # hdd
-        self.default_hdd = int(self.free_hdd * 0.8) #GB
+        #self.default_hdd = int(self.free_hdd * 0.8) #GB
+        self.default_hdd = 80 #GB
 
         try:
             with open(self.config_file) as f:
@@ -303,22 +305,22 @@ class BasicPage(ct.CTkFrame):
         self.cpu_label = ct.CTkLabel(self, text=f"{master.cpu} cores", font=(None,16))
         self.hdd_title = ct.CTkLabel(self, text="Maximum GroundSeg VM Storage Allowed")
         self.hdd_label = ct.CTkLabel(self, text=f"{master.default_hdd} GB", font=(None,16))
-        self.usage_title = ct.CTkLabel(self, text="Current GroundSeg VM Storage Used")
-        self.usage_label = ct.CTkLabel(self, text=f"{master.resize.usage()[1]} GB", font=(None,16))
+        #self.usage_title = ct.CTkLabel(self, text="Current GroundSeg VM Storage Used")
+        #self.usage_label = ct.CTkLabel(self, text=f"{master.resize.usage()[1]} GB", font=(None,16))
 
     def place_widgets(self):
         # RAM
-        self.ram_title.place(relx=0.5, rely=0.2, anchor=ct.CENTER)
-        self.ram_label.place(relx=0.5, rely=0.27, anchor=ct.CENTER)
+        self.ram_title.place(relx=0.5, rely=0.3, anchor=ct.CENTER)
+        self.ram_label.place(relx=0.5, rely=0.37, anchor=ct.CENTER)
         # CPU
-        self.cpu_title.place(relx=0.5, rely=0.37, anchor=ct.CENTER)
-        self.cpu_label.place(relx=0.5, rely=0.44, anchor=ct.CENTER)
+        self.cpu_title.place(relx=0.5, rely=0.47, anchor=ct.CENTER)
+        self.cpu_label.place(relx=0.5, rely=0.54, anchor=ct.CENTER)
         # HDD
-        self.hdd_title.place(relx=0.5, rely=0.54, anchor=ct.CENTER)
-        self.hdd_label.place(relx=0.5, rely=0.61, anchor=ct.CENTER)
+        self.hdd_title.place(relx=0.5, rely=0.64, anchor=ct.CENTER)
+        self.hdd_label.place(relx=0.5, rely=0.71, anchor=ct.CENTER)
         # Real Usage
-        self.usage_title.place(relx=0.5, rely=0.71, anchor=ct.CENTER)
-        self.usage_label.place(relx=0.5, rely=0.78, anchor=ct.CENTER)
+        #self.usage_title.place(relx=0.5, rely=0.71, anchor=ct.CENTER)
+        #self.usage_label.place(relx=0.5, rely=0.78, anchor=ct.CENTER)
 
 class AdvancedPage(ct.CTkFrame):
     def __init__(self, master, width, height):
@@ -332,8 +334,8 @@ class AdvancedPage(ct.CTkFrame):
         self.cpu_title = ct.CTkLabel(self, text="Maximum CPU Usage (Cores)")
         self.hdd_title = ct.CTkLabel(self, text="Maximum GroundSeg VM Storage Allowed")
         self.hdd_label = ct.CTkLabel(self, text=f"{master.default_hdd} GB", font=(None,16))
-        self.usage_title = ct.CTkLabel(self, text="Current GroundSeg VM Storage Used")
-        self.usage_label = ct.CTkLabel(self, text=f"{master.resize.usage()[1]} GB", font=(None,16))
+        #self.usage_title = ct.CTkLabel(self, text="Current GroundSeg VM Storage Used")
+        #self.usage_label = ct.CTkLabel(self, text=f"{master.resize.usage()[1]} GB", font=(None,16))
         
         self.ram_select(master)
         self.cpu_select(master)
@@ -359,14 +361,14 @@ class AdvancedPage(ct.CTkFrame):
 
     def place_widgets(self):
         # RAM
-        self.ram_title.place(relx=0.5, rely=0.2, anchor=ct.CENTER)
-        self.ram_sel.place(relx=0.5, rely=0.27, anchor=ct.CENTER)
+        self.ram_title.place(relx=0.5, rely=0.3, anchor=ct.CENTER)
+        self.ram_sel.place(relx=0.5, rely=0.37, anchor=ct.CENTER)
         # CPU
-        self.cpu_title.place(relx=0.5, rely=0.37, anchor=ct.CENTER)
-        self.cpu_sel.place(relx=0.5, rely=0.44, anchor=ct.CENTER)
+        self.cpu_title.place(relx=0.5, rely=0.47, anchor=ct.CENTER)
+        self.cpu_sel.place(relx=0.5, rely=0.54, anchor=ct.CENTER)
         # HDD
-        self.hdd_title.place(relx=0.5, rely=0.54, anchor=ct.CENTER)
-        self.hdd_label.place(relx=0.5, rely=0.61, anchor=ct.CENTER)
+        self.hdd_title.place(relx=0.5, rely=0.64, anchor=ct.CENTER)
+        self.hdd_label.place(relx=0.5, rely=0.71, anchor=ct.CENTER)
         # Real Usage
-        self.usage_title.place(relx=0.5, rely=0.71, anchor=ct.CENTER)
-        self.usage_label.place(relx=0.5, rely=0.78, anchor=ct.CENTER)
+        #self.usage_title.place(relx=0.5, rely=0.71, anchor=ct.CENTER)
+        #self.usage_label.place(relx=0.5, rely=0.78, anchor=ct.CENTER)
