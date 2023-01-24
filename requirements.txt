@@ -1,3 +1,2 @@
 nuitka
 ./CustomTkinter
-https://download.libguestfs.org/python/guestfs-1.40.2.tar.gz
