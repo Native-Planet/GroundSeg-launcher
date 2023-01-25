@@ -1,12 +1,15 @@
-import customtkinter as ct
 import os
 import time
 import requests
 import socket
-from pages import InstallPage, InstallingPage, FixPage, FixingPage, LaunchingPage, LauncherPage, Control
-from utils import Utils
 from threading import Thread
 
+import customtkinter as ct
+import paramiko
+
+# Classes
+from pages import InstallPage, InstallingPage, FixPage, FixingPage, LaunchingPage, LauncherPage, Control
+from utils import Utils
 
 # Main class
 class MainApp(ct.CTk):
@@ -91,11 +94,26 @@ class MainApp(ct.CTk):
         if self.launching:
             while self.launching:
                 name = socket.gethostname()
+                addr = f"{name}.local"
+                port=1723
+                username='setname'
+                password='setnamepass'
+                cmd=f'sudo hostnamectl set-hostname {name}' 
                 try:
-                    r = requests.get(f"http://{name}.local")
+                    r = requests.get(f"http://{addr}")
                     if r.status_code == 200:
+                        # Set hostname
+                        ssh=paramiko.SSHClient()
+                        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                        ssh.connect(addr,port,username,password)
+                        ssh.exec_command(cmd) # first time won't work
+                        time.sleep(3)
+                        ssh.exec_command(cmd) # second time will
+
+                        # Switch to launcher screen
                         self.launching = False
                         self.switch_frame('control')
+
                 except Exception as e:
                     pass
 

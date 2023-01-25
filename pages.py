@@ -155,8 +155,8 @@ class Control(ct.CTkFrame):
         pid = f"{master.u.install_dir}/pid"
         ports = ''.join(map(lambda x: f',hostfwd=tcp::{x}-:{x}',range(8081,8100)))
         cmd = ' '.join(['echo',self.password,'|','sudo','-S',
-                       vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",
-                       '-nic','user,hostfwd=tcp::80-:80,hostfwd=tcp::27016-:27016' + ports,
+                       vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",'-nic',
+                       'user,hostfwd=tcp::1723-:22,hostfwd=tcp::80-:80,hostfwd=tcp::27016-:27016' + ports,
                        '-accel','hvf','-display','none', '-pidfile', pid,'-daemonize'])
         subprocess.Popen(cmd,shell=True)
         # Switch frame
@@ -237,8 +237,8 @@ class LauncherPage(ct.CTkFrame):
             pid = f"{master.u.install_dir}/pid"
             ports = ''.join(map(lambda x: f',hostfwd=tcp::{x}-:{x}',range(8081,8100)))
             cmd = ' '.join(['echo',master.password,'|','sudo','-S',
-                            vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",
-                            '-nic','user,hostfwd=tcp::80-:80,hostfwd=tcp::27016-:27016' + ports,
+                            vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",'-nic',
+                            'user,hostfwd=tcp::1723-:22,hostfwd=tcp::80-:80,hostfwd=tcp::27016-:27016' + ports,
                             '-accel','hvf','-pidfile', pid,'-daemonize','-display','none'])
             subprocess.Popen(cmd,shell=True)
             master.switch_frame('launching')
