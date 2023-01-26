@@ -93,9 +93,8 @@ class MainApp(ct.CTk):
     def check_launching(self):
         if self.launching:
             while self.launching:
-                name = socket.gethostname()
-                addr = f"{name}.local"
-                if not '.local' in name:
+                addr = socket.gethostname()
+                if not '.local' in addr:
                     addr = f"{name}.local"
                 port=1723
                 username='setname'
