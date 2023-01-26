@@ -170,7 +170,10 @@ class Control(ct.CTkFrame):
         master.switch_frame('launcher')
     
     def open_groundseg(self):
-        webbrowser.open(f"http://{socket.gethostname()}.local")
+        name = socket.gethostname()
+        if not '.local' in name:
+            name = f"{name}.local"
+        webbrowser.open(f"http://{name}")
 
 
 class LauncherPage(ct.CTkFrame):
