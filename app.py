@@ -95,7 +95,8 @@ class MainApp(ct.CTk):
             while self.launching:
                 addr = socket.gethostname()
                 if not '.local' in addr:
-                    addr = f"{name}.local"
+                    addr = f"{addr}.local"
+                name = addr[:-6]
                 port=1723
                 username='setname'
                 password='setnamepass'
