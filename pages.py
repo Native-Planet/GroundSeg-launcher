@@ -157,7 +157,7 @@ class Control(ct.CTkFrame):
         cmd = ' '.join(['echo',self.password,'|','sudo','-S',
                        vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",'-nic',
                        'user,hostfwd=tcp::1723-:22,hostfwd=tcp::80-:80,hostfwd=tcp::27016-:27016' + ports,
-                       '-accel','hvf','-display','none', '-pidfile', pid,'-daemonize'])
+                       '-accel','hvf','-display','none', '-pidfile', pid,'-daemonize','-cpu','host'])
         subprocess.Popen(cmd,shell=True)
         # Switch frame
         master.switch_frame('launching')
@@ -242,7 +242,7 @@ class LauncherPage(ct.CTkFrame):
             cmd = ' '.join(['echo',master.password,'|','sudo','-S',
                             vm_bin,vm_img,'-smp',str(self.cpu),'-m',f"{self.ram}G",'-nic',
                             'user,hostfwd=tcp::1723-:22,hostfwd=tcp::80-:80,hostfwd=tcp::27016-:27016' + ports,
-                            '-accel','hvf','-pidfile', pid,'-daemonize','-display','none'])
+                            '-accel','hvf','-display','none', '-pidfile', pid,'-daemonize','-cpu','host'])
             subprocess.Popen(cmd,shell=True)
             master.switch_frame('launching')
         except Exception as e:
