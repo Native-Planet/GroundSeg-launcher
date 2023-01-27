@@ -1,3 +1,0 @@
-nuitka
-./CustomTkinter
-paramiko
