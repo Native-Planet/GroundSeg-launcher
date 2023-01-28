@@ -61,7 +61,7 @@
       {
         "fullscreen": false,
         "height": 480,
-        "resizable": true,
+        "resizable": false,
         "title": "GroundSeg Launcher",
         "width": 640
       }

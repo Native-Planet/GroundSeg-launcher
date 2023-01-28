@@ -1,33 +1,43 @@
-<script>
-  import Fa from 'svelte-fa'
-  import { faCaretLeft, faCaretRight } from '@fortawesome/free-solid-svg-icons'
-</script>
 <div class="wrapper">
-  <div class="l-icon icon">
-    <Fa icon={faCaretLeft} size="2x" />
-  </div>
-  <img src="placeholder-slide.png" />
-  <div class="r-icon icon">
-    <Fa icon={faCaretRight} size="2x" />
+  <img class="placeholder" src="placeholder-slide.png" />
+  <div class="icon">
+    <svg width="8" height="8" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="6" cy="6" r="4" stroke="white" stroke-width="2" fill="none"/>
+    </svg>
+    <svg width="8" height="8" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="6" cy="6" r="4" stroke="white" stroke-width="2" fill="white"/>
+    </svg>
+    <svg width="8" height="8" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="6" cy="6" r="4" stroke="white" stroke-width="2" fill="none"/>
+    </svg>
+    <svg width="8" height="8" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="6" cy="6" r="4" stroke="white" stroke-width="2" fill="none"/>
+    </svg>
   </div>
 </div>
 
 <style>
   .wrapper {
     width: 100%;
-    display: flex;
     align-items: center;
-    height: calc(100vh - 160px);
+    height: 320px;
   }
   .icon {
-    flex: 1;
     color: white;
-    text-align: center;
+    width: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+    height: 320px;
+    justify-content: center;
   }
-  img {
-    border-radius: 24px;
+  .placeholder {
+    float: left;
+    width: 580px;
     height: 100%;
-    width: 80%;
-    flex: 16;
+    margin-left: 20px;
+    border-radius: 24px;
+    object-fit: cover;
   }
 </style>
