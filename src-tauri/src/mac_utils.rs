@@ -40,6 +40,12 @@ pub fn load_page(packages: Vec<String>) -> String {
         "launcher".to_string()
     } else if packages.len() == 3 {
         "install".to_string()
+    } else if packages.len() == 1 {
+        if packages.get(0).unwrap().to_string() == "qemu-src" {
+            "launcher".to_string()
+        } else {
+            "fix".to_string()
+        }
     } else {
         "fix".to_string()
     }

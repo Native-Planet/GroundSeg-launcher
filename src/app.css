@@ -1,8 +1,13 @@
+/* Defining everything in this css file because
+ * for whatever reason, defining it in the
+ * components doesn't work consistently.
+ */
+
+/* Main Stuff */
 @font-face {
   font-family: Inter;
   src: url("/Inter-SemiBold.otf");
 }
-
 :root {
   font-family:Inter;
   font-synthesis: none;
@@ -16,7 +21,69 @@
   color: white;
   text-align: center;
 }
+
+/* lib/Logo.svelte */
 .logo {
   height: 32px;
-  padding: 14px;
+  padding: 24px;
+}
+
+/* lib/InstallButton.svelte */
+.install-btn {
+  margin-top: 18px;
+  font-family: inherit;
+  border-radius: 16px;
+  border: solid 1px white;
+  color: inherit;
+  background: none;
+  width: 240px;
+  line-height: 32px;
+  font-size: 12px;
+}
+.install-btn:hover {
+  background: var(--action-color);
+  border-color: var(--action-color);
+  cursor: pointer;
+}
+.install-btn:active {
+  opacity: 0.6;
+}
+
+/* lib/Launcher.svelte */
+.launcher-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.launcher-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.launcher-text {
+  font-size: 14px;
+  line-height: 24px;
+}
+.launcher-storage-val {
+  font-size: 24px;
+  line-height: 48px;
+}
+
+/* lib/launcher.svelte */
+.reset-button {
+  width: 70px;
+  display: block;
+  color: white;
+  background: none;
+  border: solid 1px white;
+  border-radius: 6px;
+  font-size: 10px;
+}
+.reset-button:hover {
+  border-color: #008CFB;
+  cursor: pointer;
+  background: #008CFB;
+}
+.reset-button:active {
+  opacity: 0.6;
 }

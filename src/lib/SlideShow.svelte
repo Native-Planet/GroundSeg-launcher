@@ -35,7 +35,7 @@
   .placeholder {
     float: left;
     width: 580px;
-    height: 100%;
+    height: 320px;
     margin-left: 20px;
     border-radius: 24px;
     object-fit: cover;
