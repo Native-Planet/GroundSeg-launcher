@@ -29,7 +29,7 @@
 }
 
 /* lib/InstallButton.svelte */
-.install-btn {
+.large-btn {
   margin-top: 18px;
   font-family: inherit;
   border-radius: 16px;
@@ -40,13 +40,78 @@
   line-height: 32px;
   font-size: 12px;
 }
-.install-btn:hover {
+.large-btn:hover {
   background: var(--action-color);
   border-color: var(--action-color);
   cursor: pointer;
+  transition: none;
 }
-.install-btn:active {
+.large-btn:active {
   opacity: 0.6;
+}
+
+/* lib/StartButton.svelte */
+.admin-pwd {
+  display: block;
+  margin: auto;
+  margin-top: 18px;
+  padding: 8px;
+  width: 360px;
+  text-align: center;
+  color: #181A21;
+  /* background: #0816244D; */
+  background: white;
+  border: solid 1px white;
+  border-radius: 4px;
+  font-family: inherit;
+}
+.admin-pwd::placeholder {
+  color: #181A213D;
+  font-family: inherit;
+}
+.admin-pwd:focus {
+  outline: none;
+}
+.admin-err {
+  border-color: red;
+  color: red;
+  background: none;
+}
+.start-btn {
+  margin-top: 18px;
+  font-family: inherit;
+  border-radius: 16px;
+  width: 240px;
+  line-height: 32px;
+  font-size: 12px;
+  transition: opacity 0.3s;
+}
+.start-enabled {
+  border: solid 1px white;
+  color: inherit;
+  background: none;
+}
+.start-enabled:hover {
+  background: var(--action-color);
+  border-color: var(--action-color);
+  cursor: pointer;
+  transition: none;
+}
+.start-enabled:active {
+  opacity: 0.6;
+}
+.start-disabled {
+  border: solid 1px white;
+  color: inherit;
+  background: none;
+  pointer-events: none;
+  opacity: 0.2;
+}
+.start-err {
+  border: solid 1px red;
+  color: red;
+  background: none;
+  pointer-events: none;
 }
 
 /* lib/Launcher.svelte */
@@ -64,12 +129,13 @@
   font-size: 14px;
   line-height: 24px;
 }
+/*
 .launcher-storage-val {
   font-size: 24px;
   line-height: 48px;
 }
+*/
 
-/* lib/launcher.svelte */
 .reset-button {
   width: 70px;
   display: block;

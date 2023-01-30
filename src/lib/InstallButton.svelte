@@ -12,7 +12,7 @@
 {#if installing}
   insert installing loading bar here
 {:else}
-  <button class="install-btn"
+  <button class="large-btn"
     on:click={()=> dispatch('click')}>
     Install GroundSeg
   </button>

@@ -62,13 +62,25 @@
         initialValue={cpuVal}
         />
     </div>
-    <!-- Max Storage -->
+    <!-- Max Storage (removed temporarily)
+      
     <div class="launcher-item">
       <div class="launcher-text">
         Maximum GroundSeg VM Storage Allowed
       </div>
       <div class="launcher-storage-val">80 GB</div>
     </div>
+    -->
+    <div class="launcher-item">
+      <div class="launcher-title">
+        <div class="launcher-text">
+          Give Admin Privileges to GroundSeg
+        </div>
+      </div>
+      <StartButton
+        {cpuVal} {ramVal}
+        on:click={e=>dispatch('click',e.detail)}
+        />
+    </div>
   </div>
-  <StartButton on:click={dispatch('click',{"ram":ramVal,"cpu":cpuVal})}/>
 {/if}

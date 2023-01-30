@@ -26,19 +26,15 @@
     curFrame = await invoke('install')
     installing = false
   }
-  // Launch GroundSeg VM
-  const startGroundSeg = (e) => {
-    curFrame = "launching"
-    //temp
-    setTimeout(async ()=> curFrame = await invoke('start'), 10000)
-  }
 
   getFrame()
 
 </script>
 
-<!-- Logo is shown on all frames -->
-<Logo />
+<!-- Logo is shown on all frames except launching -->
+{#if (curFrame != "launching")}
+  <Logo />
+{/if}
 
 <!-- Install Frame -->
 {#if (curFrame == "install")}
@@ -49,12 +45,12 @@
 
 <!-- Launcher Frame -->
 {#if (curFrame == "launcher")}
-  <Launcher on:click={startGroundSeg} />
+  <Launcher on:click={e=>curFrame = e.detail}/>
 {/if}
 
 <!-- Launching Frame -->
 {#if (curFrame == "launching")}
-  <Launching />
+  <Launching on:page={e=>curFrame = e.detail}/>
 {/if}
 
 <!-- Control Frame -->

@@ -5,12 +5,6 @@
 
 mod mac_utils;
 
-use tauri::Manager;
-//use std::fs::File;
-//use std::io::copy;
-//use reqwest::Url;
-
-
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
 #[tauri::command]
@@ -62,9 +56,24 @@ fn install() -> String {
 }
 
 #[tauri::command]
-fn start() -> String {
+fn start(pwd: String,ram: u32,cpu: u32) -> String {
+    println!("{} {} {}", pwd,ram,cpu);
+    // check if sudo password is correct
+    // if yes, proceed to start qemu
+    // if no:
+    //"error".to_string()
+    "launching".to_string()
+}
+
+#[tauri::command]
+fn check_webui() -> String {
+    // ping <hostname>.local
+    // if false
+    //"error".to_string()
+    // if true
     "control".to_string()
 }
+
 fn main() {
     //let os = std::env::consts::OS;
     //if os == "windows" {
@@ -78,7 +87,12 @@ fn main() {
     //    let packages = mac_utils::missing_packages();
     //}
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_frame,install,start])
+        .invoke_handler(tauri::generate_handler![
+                        get_frame,
+                        install,
+                        start,
+                        check_webui
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
