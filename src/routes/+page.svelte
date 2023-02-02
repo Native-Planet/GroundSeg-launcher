@@ -1,7 +1,7 @@
 <script>
   // Tauri
   import { invoke } from '@tauri-apps/api/tauri'
-  //import { listen } from '@tauri-apps/api/event'
+  import { listen } from '@tauri-apps/api/event'
 
   // Components
   import Logo from '$lib/Logo.svelte'
@@ -23,8 +23,12 @@
   // Start the install process
   const installGroundSeg = async () => {
     installing = true
+    const unlisten = await listen('progress',(event) => {
+      console.log(event)
+    })
     curFrame = await invoke('install')
     installing = false
+    unlisten()
   }
 
   getFrame()

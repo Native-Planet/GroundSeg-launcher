@@ -1,5 +1,5 @@
 <script>
-  //import { invoke } from '@tauri-apps/api/tauri'
+  import { invoke } from '@tauri-apps/api/tauri'
   //import { listen } from '@tauri-apps/api/event'
   import { onMount, createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
@@ -13,11 +13,24 @@
 
   const dispatch = createEventDispatcher()
 
-	let ramVal = 49
-	let cpuVal = 9
-
+	let ramVal = 4
+	let cpuVal = 0
   let launcherView = false
-  onMount(()=> launcherView = true)
+
+  const getRam = async () => {
+    ramVal = parseInt(await invoke('get_ram'))
+  }
+
+  const getCpu = async () => {
+    cpuVal = parseInt(await invoke('get_cpu'))
+  }
+
+
+  onMount(async ()=> {
+    await getRam()
+    await getCpu()
+    launcherView = true
+  })
 
 </script>
 

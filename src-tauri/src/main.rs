@@ -2,10 +2,24 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-
+extern crate sys_info;
+ 
 mod mac_utils;
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+//use futures_util::TryStreamExt;
+use serde::Serialize;
+use tauri::{Runtime, Window};
+//use tokio::{fs::File, io::AsyncWriteExt};
+//use tokio_util::codec::{BytesCodec, FramedRead};
+
+//use read_progress_stream::ReadProgressStream;
+
+#[derive(Clone, Serialize)]
+struct ProgressPayload {
+    //id: u32,
+    //progress: u64,
+    total: u64,
+}
 
 #[tauri::command]
 fn get_frame() -> String {
@@ -14,45 +28,55 @@ fn get_frame() -> String {
 }
 
 #[tauri::command]
-fn install() -> String {
-    //let app_handle = Manager::app_handle();
-    //app.handle.emit_all("installer","yeet").;
+async fn install<R: Runtime>(window: Window<R>) -> String {
+    let url = "http://localhost/groundseg-img.tar.xz";
+    //let res = mac_utils::download(url);
+    //let printed = res.await.unwrap() as u64;
+    //println!("{}", printed);
 
-    // hardcoded placeholders
-    //let url = "http://localhost/groundseg-img.tar.xz";
-    //let path = "/home/nal/gsl_files/groundseg-img.tar.xz";
+    //let file_path = "/home/nal/gsl_files";
+    let client = reqwest::Client::new();
 
-    //let mut response = reqwest::get(url);
-    //let mut dest = File::create(path).unwrap();
-    //copy(&mut response, &mut dest).unwrap();
-    //
-    // get size of qemu-bin
-    // get size of gs-img
-    // get size of qemu-src
+    let request = client.get(url);
 
-    // download qemu bin
-    // emit download %
+    let response = request.send().await.unwrap();
+    let total = response.content_length().ok_or_else(|| {
+        println!("Errorrrr")
+    });
 
-    // download qemu img
-    // emit download %
+    //let mut file = File::create(file_path).await.unwrap();
+    //let mut stream = response.bytes_stream();
 
-    // download qemu src
-    // emit download %
+    let _ = window.emit(
+        "progress",
+        ProgressPayload {
+            total: total.unwrap() as u64
+        });
 
-    // extract qemu bin
-    // emit extract %
+    //while let Some(chunk) = stream.try_next().await.unwrap() {
+    //    file.write_all(&chunk).await.unwrap();
+    //    let _ = window.emit(
+    //        "progress",
+    //        ProgressPayload {
+    //            progress: chunk.len() as u64,
+    //            total,
+    //        },
+    //    );
+    //}
 
-    // extract qemu img
-    // emit extract %
-
-    // extract qemu src
-    // emit extract %
-
-    // check if qemu-bin dir and gs.qcow2 exists
-    // if no, proceed to repair screen
-    // if yes, done!
-    //"done".to_string()
     "launcher".to_string()
+}
+
+#[tauri::command]
+fn get_ram() -> String {
+    let ram = mac_utils::get_config_ram();
+    ram.to_string() 
+}
+
+#[tauri::command]
+fn get_cpu() -> String {
+    let cpu = mac_utils::get_config_cpu();
+    cpu.to_string() 
 }
 
 #[tauri::command]
@@ -88,10 +112,8 @@ fn main() {
     //}
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-                        get_frame,
-                        install,
-                        start,
-                        check_webui
+                        get_frame,get_ram,get_cpu,
+                        check_webui,install,start
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
