@@ -14,6 +14,8 @@
 
   let controlView = false
   let hostname = ''
+  let pwd = ''
+
   onMount(async ()=> {
     hostname = await invoke('get_hostname')
     controlView = true
@@ -35,26 +37,34 @@
   <div class="control-wrapper"
     in:fade={{duration:200, delay: 200}}
     out:fade={{duration:160}}>
-    <div class="control-buttons">
-      <button class="ctrl-btn stop" on:click={stopGroundSeg}>
-        Stop GroundSeg
-      </button>
-      <button class="ctrl-btn restart" on:click={restartGroundSeg}>
-        Restart GroundSeg
-      </button>
-    </div>
     <a 
       class="pop-open"
       target="_blank"
       href={hostname}>
       Open GroundSeg WebUI
     </a>
+    <div class="admin-panel">
+      <div class="admin-title">Admin Settings</div>
+      <input class="admin-password" 
+             type="password"
+             placeholder="Your Device Password" 
+             bind:value={pwd} />
+      <div class="control-buttons" class:disabled={pwd.length < 1}>
+        <button class="ctrl-btn stop" on:click={stopGroundSeg}>
+          Stop GroundSeg
+        </button>
+        <button class="ctrl-btn restart" on:click={restartGroundSeg}>
+          Restart GroundSeg
+        </button>
+      </div>
+    </div>
   </div>
 {/if}
 
 <style>
   .control-wrapper {
     margin: 80px;
+    margin-top: 40px;
     display: flex;
     flex-direction: column;
     gap: 40px;
@@ -78,6 +88,10 @@
   .stop {
     color: red;
     border-color: red;
+  }
+  .disabled {
+    pointer-events: none;
+    opacity: .2;
   }
   .restart {
     color: orange;
@@ -108,5 +122,34 @@
   .pop-open:active {
     opacity: .6;
   }
-
+  .admin-panel {
+    background: #20232c;
+    padding: 20px;
+    border-radius: 20px;
+  }
+  .admin-title {
+    font-size: 14px;
+    margin: 12px;
+  }
+  .admin-password {
+    display: block;
+    margin: auto;
+    margin-bottom: 12px;
+    margin-top: 18px;
+    padding: 8px;
+    width: 360px;
+    text-align: center;
+    color: white;
+    background: #181A21;
+    border: solid 1px grey;
+    border-radius: 6px;
+    font-family: inherit;
+  }
+  .admin-password::placeholder {
+    color: grey;
+    font-family: inherit;
+  }
+  .admin-password:focus {
+    outline: none;
+  }
 </style>
