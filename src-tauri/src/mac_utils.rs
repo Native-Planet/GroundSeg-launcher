@@ -6,7 +6,7 @@ use std::path::Path;
 //use reqwest::Client;
 //use std::io::{self, Write};
 
-const INSTALL_DIR : &str  = "/home/nal/gsl_files";
+pub const INSTALL_DIR : &str  = "/home/nal/gsl_files";
 
 pub fn missing_packages() -> Vec<String> {
     let mut missing = vec![];
@@ -99,6 +99,17 @@ pub fn get_config_cpu() -> String {
         // else return cpu value
         return "4".to_string()
     }
+}
+
+pub fn get_hostname() -> String {
+    let hostname = sys_info::hostname().unwrap();
+    /*
+    if hostname.ends_with(".local") {
+        let mut result = hostname;
+        result.push_str(".local");
+        return result;
+    } */
+    hostname
 }
 //pub async fn download(url: &str) -> Result<(u64), reqwest::Error> {
 //    let client = Client::new();

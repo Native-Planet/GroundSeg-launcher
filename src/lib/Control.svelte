@@ -1,5 +1,5 @@
 <script>
-  //import { invoke } from '@tauri-apps/api/tauri'
+  import { invoke } from '@tauri-apps/api/tauri'
   //import { listen } from '@tauri-apps/api/event'
   import { onMount, createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
@@ -13,7 +13,11 @@
 
 
   let controlView = false
-  onMount(()=> controlView = true)
+  let hostname = ''
+  onMount(async ()=> {
+    hostname = await invoke('get_hostname')
+    controlView = true
+  })
 
   const stopGroundSeg = () => {
     console.log("stop groundseg")
@@ -42,7 +46,7 @@
     <a 
       class="pop-open"
       target="_blank"
-      href="http://hostname.local">
+      href={hostname}>
       Open GroundSeg WebUI
     </a>
   </div>

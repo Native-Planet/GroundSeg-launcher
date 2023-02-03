@@ -3,7 +3,11 @@
     windows_subsystem = "windows"
 )]
 extern crate sys_info;
- 
+use std::process::{Command, Stdio};
+use std::io::prelude::*; 
+use reqwest::Client;
+use std::time::Duration;
+
 mod mac_utils;
 
 //use futures_util::TryStreamExt;
@@ -81,21 +85,84 @@ fn get_cpu() -> String {
 
 #[tauri::command]
 fn start(pwd: String,ram: u32,cpu: u32) -> String {
-    println!("{} {} {}", pwd,ram,cpu);
-    // check if sudo password is correct
-    // if yes, proceed to start qemu
-    // if no:
-    //"error".to_string()
-    "launching".to_string()
+    // Kill previous sudo sessions
+    let _ = Command::new("sudo").arg("-k").spawn().expect("sudo -k failed to execute");
+
+    // Check if password is correct
+    let mut pwd_cmd = Command::new("sudo")
+        .arg("-S")
+        .arg("echo")
+        .arg("correct")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("failed to start process");
+
+    // Pass the password to stdin
+    let mut pwd_stdin = pwd_cmd.stdin.take().unwrap();
+    writeln!(pwd_stdin, "{}", &pwd).unwrap();
+    drop(pwd_stdin);
+
+    let correct = String::from("correct\n");
+    let pwd_out = pwd_cmd.wait_with_output().expect("failed to wait on process");
+    let pwd_str = String::from_utf8_lossy(&pwd_out.stdout);
+
+    if correct.eq(&pwd_str) {
+        // Define flags
+        let qemu_bin = format!("{}/qemu-binaries/qemu-system-x86_64", mac_utils::INSTALL_DIR);
+        let gs_img = format!("{}/groundseg.qcow2", mac_utils::INSTALL_DIR);
+        let pid_file = format!("{}/pid", mac_utils::INSTALL_DIR);
+        let accel = "kvm" /* "hvf" */;
+        let ram_str = format!("{}G",ram);
+        let ports: Vec<String> = (8081..8100).map(|x| format!(",hostfwd=tcp::{}-:{}", x, x)).collect();
+        let ports = ports.join("");
+        let nic = format!("user,hostfwd=tcp::1723-:22,hostfwd=tcp::80-:80,hostfwd=tcp::27016-:27016{}",ports);
+
+        // Command
+        let qemu_cmd = Command::new("sudo").arg(qemu_bin).arg(gs_img)
+            .arg("-smp").arg(cpu.to_string()).arg("-m").arg(ram_str)
+            .arg("-accel").arg(accel).arg("-cpu").arg("host")
+            .arg("-nic").arg(nic).arg("-pidfile").arg(pid_file)
+            .arg("-display").arg("none").arg("-daemonize")
+            .spawn().expect("QEMU VM failed to start");
+
+        // Print status
+        let launched = String::from("");
+        let qemu_out = qemu_cmd.wait_with_output().expect("failed to wait on process");
+        let qemu_str = String::from_utf8_lossy(&qemu_out.stdout);
+        if qemu_str.eq(&launched) {
+            // set json values
+            return "launching".to_string();
+        }
+    } 
+    // Returns error by default
+    "error".to_string()
 }
 
 #[tauri::command]
-fn check_webui() -> String {
-    // ping <hostname>.local
-    // if false
-    //"error".to_string()
-    // if true
-    "control".to_string()
+async fn check_webui() -> String {
+    let client = Client::new();
+    let hostname = mac_utils::get_hostname();
+    let url = format!("http://{}.local", hostname);
+    loop {
+        match client.get(&url).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    // ssh here
+                    return "control".to_string()
+                }
+            },
+            Err(_) => println!("ping errored")
+        }
+        std::thread::sleep(Duration::from_secs(1));
+    }
+}
+
+#[tauri::command]
+fn get_hostname() -> String {
+    let hostname = mac_utils::get_hostname();
+    let url = format!("http://{}.local", hostname);
+    url
 }
 
 fn main() {
@@ -112,7 +179,7 @@ fn main() {
     //}
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-                        get_frame,get_ram,get_cpu,
+                        get_frame,get_ram,get_cpu,get_hostname,
                         check_webui,install,start
         ])
         .run(tauri::generate_context!())
