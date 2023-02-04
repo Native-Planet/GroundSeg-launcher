@@ -14,21 +14,46 @@
   const dispatch = createEventDispatcher()
 
 	let ramVal = 4
+  let maxRam = 4
 	let cpuVal = 0
+  let maxCpu = 1
   let launcherView = false
+  let showRamSlider = true
+  let showCpuSlider = true
 
   const getRam = async () => {
     ramVal = parseInt(await invoke('get_ram'))
+  }
+
+  const resetRam = async () => {
+    showRamSlider = false
+    ramVal = parseInt(await invoke('reset_ram'))
+    showRamSlider = true
+  }
+
+  const getMaxRam = async () => {
+    maxRam = parseInt(await invoke('get_max_ram'))
   }
 
   const getCpu = async () => {
     cpuVal = parseInt(await invoke('get_cpu'))
   }
 
+  const resetCpu = async () => {
+    showCpuSlider = false
+    cpuVal = parseInt(await invoke('reset_cpu'))
+    showCpuSlider = true
+  }
+
+  const getMaxCpu = async () => {
+    maxCpu = parseInt(await invoke('get_max_cpu'))
+  }
 
   onMount(async ()=> {
     await getRam()
+    await getMaxRam()
     await getCpu()
+    await getMaxCpu()
     launcherView = true
   })
 
@@ -45,17 +70,19 @@
         <div class="launcher-text">
           Maximum RAM Usage (GB)
         </div>
-        <button class="reset-button">
+        <button on:click={resetRam} class="reset-button">
           <Fa icon={faArrowRotateLeft} size="1x" />
           Default
         </button>
       </div>
+      {#if showRamSlider}
       <Slider 
         on:change={(e) => ramVal = e.detail.value}
         min={4}
-        max={61}
+        max={maxRam}
         initialValue={ramVal}
         />
+      {/if}
     </div>
     <!-- CPU Cores -->
     <div class="launcher-item">
@@ -63,17 +90,19 @@
         <div class="launcher-text">
           Maximum CPU Cores
         </div>
-        <button class="reset-button">
+        <button on:click={resetCpu} class="reset-button">
           <Fa icon={faArrowRotateLeft} size="1x" />
           Default
         </button>
       </div>
+      {#if showCpuSlider}
       <Slider 
         on:change={(e) => cpuVal = e.detail.value}
         min={1}
-        max={12}
+        max={maxCpu}
         initialValue={cpuVal}
         />
+      {/if}
     </div>
     <!-- Max Storage (removed temporarily)
       

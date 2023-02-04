@@ -1,11 +1,11 @@
 use std::fs;
 use std::path::Path;
-//use std::fs::file;
-//use std::io::prelude::*;
 
-//use reqwest::Client;
-//use std::io::{self, Write};
+use std::fs::File;
+use std::io::Read;
+use serde::{Serialize, Deserialize};
 
+// todo: replace this with a function
 pub const INSTALL_DIR : &str  = "/home/nal/gsl_files";
 
 pub fn missing_packages() -> Vec<String> {
@@ -19,22 +19,19 @@ pub fn missing_packages() -> Vec<String> {
         }
     }
 
-    // Check if <INSTALL_DIR>/qemu-binaries exists, 
-    // if not, append 'qemu-bin' to the missing array
+    // check if qemu-binaries directory exists
     let qemu_binaries = format!("{}/qemu-binaries", INSTALL_DIR);
     if !Path::new(&qemu_binaries).exists() {
         missing.push("qemu-bin".to_string());
     }
 
-    // Check if <INSTALL_DIR>/groundseg.qcow2 exists,
-    // if not, append 'qemu-img' to the missing array
+    // check if groundseg.qcow2 exists
     let groundseg_qcow2 = format!("{}/groundseg.qcow2", INSTALL_DIR);
     if !Path::new(&groundseg_qcow2).exists() {
         missing.push("qemu-img".to_string());
     }
 
-    // Check if <INSTALL_DIR>/qemu-src.tar.xz exists,
-    // if not, append 'qemu-src' to the missing array
+    // check if qemu source code exists
     let qemu_src_tar_xz = format!("{}/qemu-src.tar.xz", INSTALL_DIR);
     if !Path::new(&qemu_src_tar_xz).exists() {
         missing.push("qemu-src".to_string());
@@ -44,6 +41,13 @@ pub fn missing_packages() -> Vec<String> {
 }
 
 pub fn load_page(packages: Vec<String>) -> String {
+    // If qemu pid file exists
+    let pid_file = format!("{}/pid", INSTALL_DIR);
+    if Path::new(&pid_file).exists() {
+        return "control".to_string();
+    }
+
+    // If qemu pid file doesn't exist
     if packages.len() == 0 {
         "launcher".to_string()
     } else if packages.len() == 3 {
@@ -59,65 +63,83 @@ pub fn load_page(packages: Vec<String>) -> String {
     }
 }
 
-//#[derive(Serialize, Deserialize, Debug)]
-//struct Person {
-//    name: String,
-//    age: u32,
-//}
+#[derive(Serialize, Deserialize)]
+struct Config {
+    ram: u32,
+    cpu: u32,
+}
 
 pub fn get_config_ram() -> String {
-    let config = format!("{}/config.json", INSTALL_DIR);
+    let config = format!("{}/settings.json", INSTALL_DIR);
 
     // Get max ram
     let max_ram = sys_info::mem_info().unwrap().total / u64::pow(2,20);
     // 80% as default
-    let mut ram = (max_ram as f32 * 0.8) as u64;
+    let ram = (max_ram as f32 * 0.8) as u64;
 
     if !Path::new(&config).exists() {
         return ram.to_string()
     } else {
-        // get from json
-        // if value is less than max, return value from json
-        // else return ram value
-        return "12".to_string()
+        let mut file = File::open(&config).unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
+
+        let cfg: Config = serde_json::from_str(&contents).unwrap();
+        return cfg.ram.to_string()
     }
 }
 
 pub fn get_config_cpu() -> String {
-    let config = format!("{}/config.json", INSTALL_DIR);
+    let config = format!("{}/settings.json", INSTALL_DIR);
 
     // Get max ram
     let max_cpu = sys_info::cpu_num().unwrap();
     // 80% as default
-    let mut cpu = (max_cpu as f32 * 0.8) as u32;
+    let cpu = (max_cpu as f32 * 0.8) as u32;
 
     if !Path::new(&config).exists() {
         return cpu.to_string()
     } else {
-        // get from json
-        // if value is less than max, return value from json
-        // else return cpu value
-        return "4".to_string()
+        let mut file = File::open(&config).unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
+
+        let cfg: Config = serde_json::from_str(&contents).unwrap();
+        return cfg.cpu.to_string()
     }
 }
 
+pub fn max_ram() -> String {
+    let max_ram = sys_info::mem_info().unwrap().total / u64::pow(2,20);
+    max_ram.to_string()
+}
+
+pub fn max_cpu() -> String {
+    let max_cpu = sys_info::cpu_num().unwrap();
+    max_cpu.to_string()
+}
+
+pub fn default_ram() -> String {
+    // Get max ram
+    let max_ram = sys_info::mem_info().unwrap().total / u64::pow(2,20);
+    // 80% as default
+    let ram = (max_ram as f32 * 0.8) as u64;
+    ram.to_string()
+}
+
+pub fn default_cpu() -> String {
+    // Get max cpu
+    let max_cpu = sys_info::cpu_num().unwrap();
+    // 80% as default
+    let cpu = (max_cpu as f32 * 0.8) as u32;
+    cpu.to_string()
+}
+
 pub fn get_hostname() -> String {
-    let hostname = sys_info::hostname().unwrap();
-    /*
+    let mut hostname = sys_info::hostname().unwrap();
     if hostname.ends_with(".local") {
-        let mut result = hostname;
-        result.push_str(".local");
-        return result;
-    } */
+        let new_len = hostname.len() - ".local".len();
+        hostname.truncate(new_len)
+    }
     hostname
 }
-//pub async fn download(url: &str) -> Result<(u64), reqwest::Error> {
-//    let client = Client::new();
-//    let mut res = client.get(url).send().await?;
-//    while let Some(chunk) = res.chunk().await? {
-//        io::stdout().write_all(&chunk)?;
-//        io::stdout().flush()?;
-//        println!("Received chunk of size: {}", chunk.len());
-//    }
-//    Ok(0)
-//}

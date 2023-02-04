@@ -15,20 +15,31 @@
   let controlView = false
   let hostname = ''
   let pwd = ''
+  let adminError = false
 
   onMount(async ()=> {
     hostname = await invoke('get_hostname')
     controlView = true
   })
 
-  const stopGroundSeg = () => {
-    console.log("stop groundseg")
-    // prompt for sudo password
+  const stopGroundSeg = async () => {
+    let res = await invoke('stop', {pwd:pwd})
+    if (res === "error") {
+      adminError = true
+      setTimeout(()=>{adminError = false; pwd = ''}, 3000)
+    } else {
+      dispatch('page',res)
+    }
   }
 
-  const restartGroundSeg = () => {
-    console.log("restart groundseg")
-    // prompt for sudo password
+  const restartGroundSeg = async () => {
+    let res = await invoke('restart', {pwd:pwd})
+    if (res === "error") {
+      adminError = true
+      setTimeout(()=>{adminError = false; pwd = ''}, 3000)
+    } else {
+      dispatch('page',res)
+    }
   }
 
 </script>
@@ -46,10 +57,11 @@
     <div class="admin-panel">
       <div class="admin-title">Admin Settings</div>
       <input class="admin-password" 
+             disabled={adminError}
              type="password"
              placeholder="Your Device Password" 
              bind:value={pwd} />
-      <div class="control-buttons" class:disabled={pwd.length < 1}>
+      <div class="control-buttons" class:disabled={(pwd.length < 1) || adminError }>
         <button class="ctrl-btn stop" on:click={stopGroundSeg}>
           Stop GroundSeg
         </button>
@@ -144,6 +156,9 @@
     border: solid 1px grey;
     border-radius: 6px;
     font-family: inherit;
+  }
+  .admin-password:disabled {
+    background: #F3000030;
   }
   .admin-password::placeholder {
     color: grey;

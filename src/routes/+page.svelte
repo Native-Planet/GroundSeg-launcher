@@ -59,5 +59,5 @@
 
 <!-- Control Frame -->
 {#if (curFrame == "control")}
-  <Control />
+  <Control on:page={e=>curFrame = e.detail}/>
 {/if}
