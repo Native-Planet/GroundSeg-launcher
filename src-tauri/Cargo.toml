@@ -21,9 +21,10 @@ tauri = { version = "1.2", features = ["shell-open"] }
 
 # Added stuff
 pipe_downloader_lib = "0.4.4"
-reqwest = "0.11.14"
+reqwest = { version = "0.11.14", default-features = false, features = ["rustls-tls"] }
 sys-info = "0.9.1"
-ssh2 = "0.9.4"
+ssh-rs = "0.3.2"
+# ssh2 = "0.9.4"
 
 [features]
 # by default Tauri runs in production mode

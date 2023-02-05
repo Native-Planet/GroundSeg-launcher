@@ -8,12 +8,13 @@ extern crate sys_info;
 use std::fs::File;
 use std::path::Path;
 use std::io::Write;
-use std::io::prelude::*;
-use std::net::{TcpStream};
+//use std::io::prelude::*;
+//use std::net::{TcpStream};
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
-use ssh2::Session;
+use ssh_rs::ssh;
+//use ssh2::Session;
 use reqwest::Client;
 use serde::{Serialize, Deserialize};
 use tauri::{Runtime, Window};
@@ -361,12 +362,28 @@ async fn check_webui() -> String {
         match client.get(&url).send().await {
             Ok(response) => {
                 if response.status().is_success() {
+                    // Credentials
                     let username = "setname";
                     let password = "setnamepass";
                     let host = format!("{}.local:1723", &hostname);
                     let cmd = format!("sudo hostnamectl set-hostname {}", &hostname);
 
-                    // Connect to the local SSH server
+                    let mut session = ssh::create_session()
+                        .username(&username)
+                        .password(&password)
+                        .connect(&host)
+                        .unwrap()
+                        .run_local();
+                    let exec = session.open_exec().unwrap();
+                    let vec: Vec<u8> = exec.send_command(&cmd).unwrap();
+                    println!("{}", String::from_utf8(vec).unwrap());
+                    // Close session.
+                    session.close();
+
+
+
+
+                    /* Connect to the local SSH server
                     let tcp = TcpStream::connect(host).unwrap();
                     let mut sess = Session::new().unwrap();
                     sess.set_tcp_stream(tcp);
@@ -380,13 +397,14 @@ async fn check_webui() -> String {
                     println!("{}", s);
                     channel.wait_close().expect("failed to close ssh channel");
                     println!("{}", channel.exit_status().unwrap());
+                    */
 
                     return "control".to_string()
                 }
             },
             Err(_) => println!("GroundSeg has not started yet, checking again...")
         }
-        std::thread::sleep(Duration::from_secs(1));
+        std::thread::sleep(Duration::from_millis(100));
     }
 }
 
