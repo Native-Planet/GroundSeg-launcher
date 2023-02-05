@@ -5,23 +5,29 @@
 
 extern crate sys_info;
 
+use std::fs::File;
+use std::path::Path;
+use std::io::Write;
 use std::io::prelude::*;
 use std::net::{TcpStream};
-use ssh2::Session;use std::process::{Command, Stdio};
-use reqwest::Client;
+use std::process::{Command, Stdio};
 use std::time::Duration;
-use std::fs::File;
-use std::io::Write;
+
+use ssh2::Session;
+use reqwest::Client;
 use serde::{Serialize, Deserialize};
 use tauri::{Runtime, Window};
+use pipe_downloader_lib::*;
 
 mod mac_utils;
 
 #[derive(Clone, Serialize)]
 struct ProgressPayload {
-    //id: u32,
-    //progress: u64,
-    total: u64,
+    downloaded: usize,
+    total: usize,
+    num: usize,
+    all: usize,
+    speed: usize,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -38,8 +44,118 @@ fn get_frame() -> String {
 
 #[tauri::command]
 async fn install<R: Runtime>(window: Window<R>) -> String {
-    // todo: make it actually work
-    "launcher".to_string()
+    // URLs
+    let gs_img = "https://files.native.computer/groundseg-img.tar.xz";
+    let qemu_bin = "https://files.native.computer/qemu-bin.tar.xz";
+    let qemu_src = "https://files.native.computer/qemu-src.tar.xz";
+
+    let files = [&gs_img, &qemu_bin, &qemu_src];
+    let path_str = format!("{}", mac_utils::install_dir());
+    let path = Path::new(&path_str);
+
+    for (i, f) in files.iter().enumerate() {
+        let dl = PipeDownloaderOptions {
+            chunk_size_downloader: 50000000,
+            chunk_size_decoder: 100000000,
+            max_download_speed: Some(1000000000),
+            force_no_chunks: false,
+            download_threads: 8,
+        };
+
+        let res = dl.start_download(f, path).expect("failed to download");
+
+        loop {
+            let finished = &res.is_finished();
+            let progress = &res.get_progress();
+
+            let total = progress.total_download_size.unwrap_or(0);
+            let downloaded = progress.downloaded;
+            let speed = progress.current_download_speed;
+            let _ = window.emit(
+                "progress",
+                ProgressPayload {
+                    downloaded,
+                    total,
+                    num: i + 1,
+                    all: files.len(),
+                    speed: speed,
+                }
+            );
+
+            if *finished { break };
+
+            std::thread::sleep(Duration::from_millis(100));
+        }
+    }
+
+    let packages = mac_utils::missing_packages();
+    mac_utils::load_page(packages)
+}
+
+#[tauri::command]
+async fn repair<R: Runtime>(window: Window<R>) -> String {
+    // Get missing packages
+    let packages = mac_utils::missing_packages();
+    let mut files = vec![];
+
+    // URLs
+    let gs_img = "https://files.native.computer/groundseg-img.tar.xz";
+    let qemu_bin = "https://files.native.computer/qemu-bin.tar.xz";
+    let qemu_src = "https://files.native.computer/qemu-src.tar.xz";
+
+    let path_str = format!("{}", mac_utils::install_dir());
+    let path = Path::new(&path_str);
+
+    for p in packages {
+        println!("{}",p);
+        if p == "qemu-bin" {
+            files.push(&qemu_bin)
+        };
+        if p == "qemu-src" {
+            files.push(&qemu_src)
+        };
+        if p == "gs-img" {
+            files.push(&gs_img)
+        };
+    };
+
+    for (i, f) in files.iter().enumerate() {
+        let dl = PipeDownloaderOptions {
+            chunk_size_downloader: 50000000,
+            chunk_size_decoder: 100000000,
+            max_download_speed: Some(1000000000),
+            force_no_chunks: false,
+            download_threads: 8,
+        };
+
+        let res = dl.start_download(f, path).expect("failed to download");
+
+        loop {
+            let finished = &res.is_finished();
+            let progress = &res.get_progress();
+
+            let total = progress.total_download_size.unwrap_or(0);
+            let downloaded = progress.downloaded;
+            let speed = progress.current_download_speed;
+            let _ = window.emit(
+                "progress",
+                ProgressPayload {
+                    downloaded,
+                    total,
+                    num: i + 1,
+                    all: files.len(),
+                    speed: speed,
+                }
+            );
+
+            if *finished { break };
+
+            std::thread::sleep(Duration::from_millis(100));
+        }
+    }
+
+    let packages = mac_utils::missing_packages();
+    mac_utils::load_page(packages)
 }
 
 #[tauri::command]
@@ -80,10 +196,10 @@ fn start(pwd: String,ram: u32,cpu: u32) -> String {
 
     if correct.eq(&pwd_str) {
         // Define flags
-        let qemu_bin = format!("{}/qemu-binaries/qemu-system-x86_64", mac_utils::INSTALL_DIR);
-        let gs_img = format!("{}/groundseg.qcow2", mac_utils::INSTALL_DIR);
-        let pid_file = format!("{}/pid", mac_utils::INSTALL_DIR);
-        let accel = "kvm" /* "hvf" */;
+        let qemu_bin = format!("{}/qemu-binaries/qemu-system-x86_64", mac_utils::install_dir());
+        let gs_img = format!("{}/groundseg.qcow2", mac_utils::install_dir());
+        let pid_file = format!("{}/pid", mac_utils::install_dir());
+        let accel = "hvf";
         let ram_str = format!("{}G",ram);
         let ports: Vec<String> = (8081..8100).map(|x| format!(",hostfwd=tcp::{}-:{}", x, x)).collect();
         let ports = ports.join("");
@@ -104,7 +220,7 @@ fn start(pwd: String,ram: u32,cpu: u32) -> String {
 
         if qemu_str.eq(&launched) {
             // set json values
-            let file = format!("{}/settings.json", mac_utils::INSTALL_DIR);
+            let file = format!("{}/settings.json", mac_utils::install_dir());
             let cfg = Config {ram: ram, cpu: cpu};
             let mut make_file = File::create(file).unwrap();
             serde_json::to_writer_pretty(&mut make_file, &cfg).unwrap();
@@ -143,7 +259,7 @@ fn stop(pwd: String) -> String {
 
     if correct.eq(&pwd_str) {
         // pid file location
-        let pid = format!("{}/pid",mac_utils::INSTALL_DIR);
+        let pid = format!("{}/pid",mac_utils::install_dir());
         // get pid
         let pid_cmd = Command::new("sudo").arg("cat").arg(pid)
             .output().expect("failed to get PID");
@@ -189,7 +305,7 @@ fn restart(pwd: String) -> String {
 
     if correct.eq(&pwd_str) {
         // pid file location
-        let pid = format!("{}/pid",mac_utils::INSTALL_DIR);
+        let pid = format!("{}/pid",mac_utils::install_dir());
         // get pid
         let pid_cmd = Command::new("sudo").arg("cat").arg(pid)
             .output().expect("failed to get PID");
@@ -203,10 +319,10 @@ fn restart(pwd: String) -> String {
             .output().expect("failed to kill process");
 
         // start groundseg again
-        let qemu_bin = format!("{}/qemu-binaries/qemu-system-x86_64", mac_utils::INSTALL_DIR);
-        let gs_img = format!("{}/groundseg.qcow2", mac_utils::INSTALL_DIR);
-        let pid_file = format!("{}/pid", mac_utils::INSTALL_DIR);
-        let accel = "kvm" /* "hvf" */;
+        let qemu_bin = format!("{}/qemu-binaries/qemu-system-x86_64", mac_utils::install_dir());
+        let gs_img = format!("{}/groundseg.qcow2", mac_utils::install_dir());
+        let pid_file = format!("{}/pid", mac_utils::install_dir());
+        let accel = "hvf";
         let ram = format!("{}G",mac_utils::get_config_ram());
         let cpu = mac_utils::get_config_cpu();
         let ports: Vec<String> = (8081..8100).map(|x| format!(",hostfwd=tcp::{}-:{}", x, x)).collect();
@@ -262,7 +378,7 @@ async fn check_webui() -> String {
                     let mut s = String::new();
                     channel.read_to_string(&mut s).unwrap();
                     println!("{}", s);
-                    channel.wait_close();
+                    channel.wait_close().expect("failed to close ssh channel");
                     println!("{}", channel.exit_status().unwrap());
 
                     return "control".to_string()
@@ -304,8 +420,8 @@ fn reset_cpu() -> String {
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-                        get_frame,get_hostname,
-                        check_webui,install,start,stop,restart,
+                        get_frame,get_hostname,check_webui,
+                        install,start,stop,restart,repair,
                         reset_ram,get_ram,get_max_ram,
                         reset_cpu,get_cpu,get_max_cpu
         ])

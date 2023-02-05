@@ -20,8 +20,8 @@ serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.2", features = ["shell-open"] }
 
 # Added stuff
-reqwest = "0.11.14"
-tokio = "1.25.0"
+pipe_downloader_lib = "0.4.4"
+reqwest = { version = "0.11.14"}
 sys-info = "0.9.1"
 ssh2 = "0.9.4"
 

@@ -1,38 +1,42 @@
 use std::fs;
+use std::env;
 use std::path::Path;
 
 use std::fs::File;
 use std::io::Read;
 use serde::{Serialize, Deserialize};
 
-// todo: replace this with a function
-pub const INSTALL_DIR : &str  = "/home/nal/gsl_files";
+pub fn install_dir() -> String {
+    let v = env::var("USER").expect("$USER is not set").to_string();
+    String::from("/Users/".to_owned() + {&v} + "/Documents/groundseg")
+    //String::from("/home/".to_owned() + {&v} + "/Documents/groundseg")
+}
 
 pub fn missing_packages() -> Vec<String> {
     let mut missing = vec![];
 
-    // Check if INSTALL_DIR exists, if not, create it
-    if !Path::new(INSTALL_DIR).exists() {
-        match fs::create_dir(INSTALL_DIR) {
+    // Check if install_dir().as_str() exists, if not, create it
+    if !Path::new(install_dir().as_str()).exists() {
+        match fs::create_dir(install_dir().as_str()) {
             Ok(_) => {}
-            Err(e) => println!("Error creating INSTALL_DIR: {}", e),
+            Err(e) => println!("Error creating install_dir().as_str(): {}", e),
         }
     }
 
     // check if qemu-binaries directory exists
-    let qemu_binaries = format!("{}/qemu-binaries", INSTALL_DIR);
+    let qemu_binaries = format!("{}/qemu-binaries", install_dir().as_str());
     if !Path::new(&qemu_binaries).exists() {
         missing.push("qemu-bin".to_string());
     }
 
     // check if groundseg.qcow2 exists
-    let groundseg_qcow2 = format!("{}/groundseg.qcow2", INSTALL_DIR);
+    let groundseg_qcow2 = format!("{}/groundseg.qcow2", install_dir().as_str());
     if !Path::new(&groundseg_qcow2).exists() {
-        missing.push("qemu-img".to_string());
+        missing.push("gs-img".to_string());
     }
 
     // check if qemu source code exists
-    let qemu_src_tar_xz = format!("{}/qemu-src.tar.xz", INSTALL_DIR);
+    let qemu_src_tar_xz = format!("{}/qemu-7.2.0", install_dir().as_str());
     if !Path::new(&qemu_src_tar_xz).exists() {
         missing.push("qemu-src".to_string());
     }
@@ -42,7 +46,7 @@ pub fn missing_packages() -> Vec<String> {
 
 pub fn load_page(packages: Vec<String>) -> String {
     // If qemu pid file exists
-    let pid_file = format!("{}/pid", INSTALL_DIR);
+    let pid_file = format!("{}/pid", install_dir().as_str());
     if Path::new(&pid_file).exists() {
         return "control".to_string();
     }
@@ -70,7 +74,7 @@ struct Config {
 }
 
 pub fn get_config_ram() -> String {
-    let config = format!("{}/settings.json", INSTALL_DIR);
+    let config = format!("{}/settings.json", install_dir().as_str());
 
     // Get max ram
     let max_ram = sys_info::mem_info().unwrap().total / u64::pow(2,20);
@@ -90,7 +94,7 @@ pub fn get_config_ram() -> String {
 }
 
 pub fn get_config_cpu() -> String {
-    let config = format!("{}/settings.json", INSTALL_DIR);
+    let config = format!("{}/settings.json", install_dir().as_str());
 
     // Get max ram
     let max_cpu = sys_info::cpu_num().unwrap();
