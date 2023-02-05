@@ -1,34 +1,23 @@
 <script>
   // Tauri
   import { invoke } from '@tauri-apps/api/tauri'
-  import { listen } from '@tauri-apps/api/event'
 
   // Components
   import Logo from '$lib/Logo.svelte'
-  import Install from '$lib/Install.svelte'
   import InstallButton from '$lib/InstallButton.svelte'
+  import RepairButton from '$lib/RepairButton.svelte'
+
+  import Install from '$lib/Install.svelte'
+  import Repair from '$lib/Repair.svelte'
   import Launcher from '$lib/Launcher.svelte'
   import Launching from '$lib/Launching.svelte'
   import Control from '$lib/Control.svelte'
 
-/* Variables */
   let curFrame = "" // Which component to show
-  let installing = false
 
-/* Invokes */
   // Get the correct frame
   const getFrame = async () => {
     curFrame = await invoke('get_frame')
-  }
-  // Start the install process
-  const installGroundSeg = async () => {
-    installing = true
-    const unlisten = await listen('progress',(event) => {
-      console.log(event)
-    })
-    curFrame = await invoke('install')
-    installing = false
-    unlisten()
   }
 
   getFrame()
@@ -43,10 +32,16 @@
 <!-- Install Frame -->
 {#if (curFrame == "install")}
   <Install>
-    <InstallButton on:click={installGroundSeg} {installing} />
+    <InstallButton on:page={e=>curFrame = e.detail}/>
   </Install>
 {/if}
 
+<!-- Repair Frame -->
+{#if (curFrame == "fix")}
+  <Repair>
+    <RepairButton on:page={e=>curFrame = e.detail}/>
+  </Repair>
+{/if}
 <!-- Launcher Frame -->
 {#if (curFrame == "launcher")}
   <Launcher on:click={e=>curFrame = e.detail}/>
