@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "groundseg_launcher",
-    "version": "0.0.0"
+    "version": "0.1.0"
   },
   "tauri": {
     "allowlist": {
@@ -60,7 +60,7 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 480,
+        "height": 500,
         "resizable": false,
         "title": "GroundSeg Launcher",
         "width": 640

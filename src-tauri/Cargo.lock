@@ -3,20 +3,6 @@
 version = 3
 
 [[package]]
-name = "GroundSeg-launcher"
-version = "0.0.0"
-dependencies = [
- "pipe_downloader_lib",
- "reqwest",
- "serde",
- "serde_json",
- "ssh2",
- "sys-info",
- "tauri",
- "tauri-build",
-]
-
-[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -968,6 +954,20 @@ dependencies = [
  "glib-sys",
  "libc",
  "system-deps 6.0.3",
+]
+
+[[package]]
+name = "groundseg_launcher"
+version = "0.1.0"
+dependencies = [
+ "pipe_downloader_lib",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "ssh2",
+ "sys-info",
+ "tauri",
+ "tauri-build",
 ]
 
 [[package]]
