@@ -9,26 +9,26 @@
 
   const dispatch = createEventDispatcher()
 
-  let installing = false
+  let repairing = false
   let progress = {}
 
   // Start the install process
-  const installGroundSeg = async () => {
-    installing = true
+  const repairGroundSeg = async () => {
+    repairing = true
 
     const unlisten = await listen('progress',(event) => {
       progress = event.payload
     })
 
-    dispatch("page",await invoke('install'))
+    dispatch("page",await invoke('repair'))
     unlisten()
 
-    installing = false
+    repairing = false
   }
 
 </script>
 
-{#if installing}
+{#if repairing}
 
   <div class="full-wrapper">
     <div class="bar-wrapper">
@@ -51,7 +51,7 @@
 
     </div>
 
-    <div class="current-item">Installing {progress.num} of {progress.all}</div>
+    <div class="current-item">Repairing {progress.num} of {progress.all}</div>
 
     {#if (progress.downloaded > 0) && (progress.downloaded < progress.total)}
       {#if progress.speed > (1000**2)}
@@ -64,8 +64,8 @@
 
 {:else}
 
-  <button class="large-btn" on:click={installGroundSeg}>
-    Install GroundSeg
+  <button class="large-btn" on:click={repairGroundSeg}>
+    Repair GroundSeg
   </button>
 
 {/if}
