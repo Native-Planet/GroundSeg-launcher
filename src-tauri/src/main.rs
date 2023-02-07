@@ -101,6 +101,7 @@ async fn repair<R: Runtime>(window: Window<R>) -> String {
     let gs_img = "https://files.native.computer/groundseg-img.tar.xz";
     let qemu_bin = "https://files.native.computer/qemu-bin.tar.xz";
     let qemu_lib = "https://files.native.computer/qemu-lib.tar.xz";
+    let glib_bin = "https://files.native.computer/glib-bin.tar.xz";
     let qemu_src = "https://files.native.computer/qemu-src.tar.xz";
 
     let path_str = format!("{}", mac_utils::install_dir());
@@ -119,6 +120,9 @@ async fn repair<R: Runtime>(window: Window<R>) -> String {
         };
         if p == "qemu-lib" {
             files.push(&qemu_lib)
+        };
+        if p == "glib-bin" {
+            files.push(&glib_bin)
         };
     };
 

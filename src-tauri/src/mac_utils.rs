@@ -47,6 +47,12 @@ pub fn missing_packages() -> Vec<String> {
     if !Path::new(&qemu_lib_tar_xz).exists() {
         missing.push("qemu-lib".to_string());
     }
+
+    // check if glib binary exists
+    let qemu_lib_tar_xz = format!("{}/bin", install_dir().as_str());
+    if !Path::new(&qemu_lib_tar_xz).exists() {
+        missing.push("glib-bin".to_string());
+    }
     return missing;
 }
 
@@ -61,7 +67,7 @@ pub fn load_page(packages: Vec<String>) -> String {
     if packages.len() == 0 {
         make_symlink();
         "launcher".to_string()
-    } else if packages.len() == 4 {
+    } else if packages.len() == 5 {
         "install".to_string()
     } else if packages.len() == 1 {
         if packages.get(0).unwrap().to_string() == "qemu-src" {
@@ -102,6 +108,20 @@ fn make_symlink() {
             .arg(glib_dest)
             .spawn()
             .expect("failed to create glib symlink");
+    }
+
+    // glib-bin
+    let bin_file = "/usr/local/lib/libglib-2.0.0.dylib";
+    let bin_src = format!("{}/bin/libglib-2.0.0.dylib", install_dir().as_str());
+    let bin_dest = "/usr/local/lib/libglib-2.0.0.dylib";
+
+    if !Path::new(&bin_file).exists() {
+        let _ = Command::new("ln")
+            .arg("-s")
+            .arg(bin_src) 
+            .arg(bin_dest)
+            .spawn()
+            .expect("failed to create glib binary symlink");
     }
 
     // libslirp
