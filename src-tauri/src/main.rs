@@ -45,10 +45,11 @@ async fn install<R: Runtime>(window: Window<R>) -> String {
     // URLs
     let gs_img = "https://files.native.computer/groundseg-img.tar.xz";
     let qemu_bin = "https://files.native.computer/qemu-bin.tar.xz";
+    let qemu_opt = "https://files.native.computer/qemu-opt.tar.xz";
     let qemu_lib = "https://files.native.computer/qemu-lib.tar.xz";
     let qemu_src = "https://files.native.computer/qemu-src.tar.xz";
 
-    let files = [&gs_img, &qemu_bin, &qemu_lib, &qemu_src];
+    let files = [&gs_img, &qemu_bin, &qemu_opt, &qemu_lib, &qemu_src];
     let path_str = format!("{}", mac_utils::install_dir());
     let path = Path::new(&path_str);
 
@@ -100,8 +101,8 @@ async fn repair<R: Runtime>(window: Window<R>) -> String {
     // URLs
     let gs_img = "https://files.native.computer/groundseg-img.tar.xz";
     let qemu_bin = "https://files.native.computer/qemu-bin.tar.xz";
+    let qemu_opt = "https://files.native.computer/qemu-opt.tar.xz";
     let qemu_lib = "https://files.native.computer/qemu-lib.tar.xz";
-    let glib_bin = "https://files.native.computer/glib-bin.tar.xz";
     let qemu_src = "https://files.native.computer/qemu-src.tar.xz";
 
     let path_str = format!("{}", mac_utils::install_dir());
@@ -121,8 +122,8 @@ async fn repair<R: Runtime>(window: Window<R>) -> String {
         if p == "qemu-lib" {
             files.push(&qemu_lib)
         };
-        if p == "glib-bin" {
-            files.push(&glib_bin)
+        if p == "qemu-opt" {
+            files.push(&qemu_opt)
         };
     };
 

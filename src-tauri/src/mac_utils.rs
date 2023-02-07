@@ -48,10 +48,10 @@ pub fn missing_packages() -> Vec<String> {
         missing.push("qemu-lib".to_string());
     }
 
-    // check if glib binary exists
-    let qemu_lib_tar_xz = format!("{}/bin", install_dir().as_str());
+    // check if qemu opt libraries exists
+    let qemu_lib_tar_xz = format!("{}/opt", install_dir().as_str());
     if !Path::new(&qemu_lib_tar_xz).exists() {
-        missing.push("glib-bin".to_string());
+        missing.push("qemu-opt".to_string());
     }
     return missing;
 }
@@ -84,7 +84,7 @@ pub fn load_page(packages: Vec<String>) -> String {
 fn make_symlink() {
     // pixman
     let pixman_file = "/usr/local/opt/pixman/lib/libpixman-1.0.dylib";
-    let pixman_src = format!("{}/lib/pixman", install_dir().as_str());
+    let pixman_src = format!("{}/opt/pixman", install_dir().as_str());
     let pixman_dest = "/usr/local/opt/pixman";
 
     if !Path::new(&pixman_file).exists() {
@@ -98,7 +98,7 @@ fn make_symlink() {
 
     // glib
     let glib_file = "/usr/local/opt/glib/lib/libgio-2.0.0.dylib";
-    let glib_src = format!("{}/lib/glib", install_dir().as_str());
+    let glib_src = format!("{}/opt/glib", install_dir().as_str());
     let glib_dest = "/usr/local/opt/glib";
 
     if !Path::new(&glib_file).exists() {
@@ -110,23 +110,9 @@ fn make_symlink() {
             .expect("failed to create glib symlink");
     }
 
-    // glib-bin
-    let bin_file = "/usr/local/lib/libglib-2.0.0.dylib";
-    let bin_src = format!("{}/bin/libglib-2.0.0.dylib", install_dir().as_str());
-    let bin_dest = "/usr/local/lib/libglib-2.0.0.dylib";
-
-    if !Path::new(&bin_file).exists() {
-        let _ = Command::new("ln")
-            .arg("-s")
-            .arg(bin_src) 
-            .arg(bin_dest)
-            .spawn()
-            .expect("failed to create glib binary symlink");
-    }
-
     // libslirp
     let libslirp_file = "/usr/local/opt/libslirp/lib/libslirp.0.dylib";
-    let libslirp_src = format!("{}/lib/libslirp", install_dir().as_str());
+    let libslirp_src = format!("{}/opt/libslirp", install_dir().as_str());
     let libslirp_dest = "/usr/local/opt/libslirp";
 
     if !Path::new(&libslirp_file).exists() {
@@ -140,7 +126,7 @@ fn make_symlink() {
 
     // libssh
     let libssh_file = "/usr/local/opt/libssh/lib/libssh.4.dylib";
-    let libssh_src = format!("{}/lib/libssh", install_dir().as_str());
+    let libssh_src = format!("{}/opt/libssh", install_dir().as_str());
     let libssh_dest = "/usr/local/opt/libssh";
 
     if !Path::new(&libssh_file).exists() {
@@ -151,6 +137,49 @@ fn make_symlink() {
             .spawn()
             .expect("failed to create libssh symlink");
     }
+
+    // libglib
+    let libglib_file = "/usr/local/lib/libglib-2.0.0.dylib";
+    let libglib_src = format!("{}/lib/libglib-2.0.0.dylib", install_dir().as_str());
+    let libglib_dest = "/usr/local/lib/libglib-2.0.0.dylib";
+
+    if !Path::new(&libglib_file).exists() {
+        let _ = Command::new("ln")
+            .arg("-s")
+            .arg(libglib_src) 
+            .arg(libglib_dest)
+            .spawn()
+            .expect("failed to create libglib symlink");
+    }
+
+    // libgmodule
+    let libgmodule_file = "/usr/local/lib/libgmodule-2.0.0.dylib";
+    let libgmodule_src = format!("{}/lib/libgmodule-2.0.0.dylib", install_dir().as_str());
+    let libgmodule_dest = "/usr/local/lib/libgmodule-2.0.0.dylib";
+
+    if !Path::new(&libgmodule_file).exists() {
+        let _ = Command::new("ln")
+            .arg("-s")
+            .arg(libgmodule_src) 
+            .arg(libgmodule_dest)
+            .spawn()
+            .expect("failed to create libgmodule binary symlink");
+    }
+
+    // libgobject
+    let libgobject_file = "/usr/local/lib/libgobject-2.0.0.dylib";
+    let libgobject_src = format!("{}/lib/libgobject-2.0.0.dylib", install_dir().as_str());
+    let libgobject_dest = "/usr/local/lib/libgobject-2.0.0.dylib";
+
+    if !Path::new(&libgobject_file).exists() {
+        let _ = Command::new("ln")
+            .arg("-s")
+            .arg(libgobject_src) 
+            .arg(libgobject_dest)
+            .spawn()
+            .expect("failed to create libgobject binary symlink");
+    }
+
 }
 
 #[derive(Serialize, Deserialize)]
