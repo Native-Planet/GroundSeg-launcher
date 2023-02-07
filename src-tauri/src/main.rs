@@ -8,13 +8,10 @@ extern crate sys_info;
 use std::fs::File;
 use std::path::Path;
 use std::io::Write;
-//use std::io::prelude::*;
-//use std::net::{TcpStream};
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
 use ssh_rs::ssh;
-//use ssh2::Session;
 use reqwest::Client;
 use serde::{Serialize, Deserialize};
 use tauri::{Runtime, Window};
@@ -48,9 +45,10 @@ async fn install<R: Runtime>(window: Window<R>) -> String {
     // URLs
     let gs_img = "https://files.native.computer/groundseg-img.tar.xz";
     let qemu_bin = "https://files.native.computer/qemu-bin.tar.xz";
+    let qemu_lib = "https://files.native.computer/qemu-lib.tar.xz";
     let qemu_src = "https://files.native.computer/qemu-src.tar.xz";
 
-    let files = [&gs_img, &qemu_bin, &qemu_src];
+    let files = [&gs_img, &qemu_bin, &qemu_lib, &qemu_src];
     let path_str = format!("{}", mac_utils::install_dir());
     let path = Path::new(&path_str);
 
@@ -102,6 +100,7 @@ async fn repair<R: Runtime>(window: Window<R>) -> String {
     // URLs
     let gs_img = "https://files.native.computer/groundseg-img.tar.xz";
     let qemu_bin = "https://files.native.computer/qemu-bin.tar.xz";
+    let qemu_lib = "https://files.native.computer/qemu-lib.tar.xz";
     let qemu_src = "https://files.native.computer/qemu-src.tar.xz";
 
     let path_str = format!("{}", mac_utils::install_dir());
@@ -117,6 +116,9 @@ async fn repair<R: Runtime>(window: Window<R>) -> String {
         };
         if p == "gs-img" {
             files.push(&gs_img)
+        };
+        if p == "qemu-lib" {
+            files.push(&qemu_lib)
         };
     };
 
@@ -379,25 +381,6 @@ async fn check_webui() -> String {
                     println!("{}", String::from_utf8(vec).unwrap());
                     // Close session.
                     session.close();
-
-
-
-
-                    /* Connect to the local SSH server
-                    let tcp = TcpStream::connect(host).unwrap();
-                    let mut sess = Session::new().unwrap();
-                    sess.set_tcp_stream(tcp);
-                    sess.handshake().unwrap();
-                    sess.userauth_password(username,password).unwrap();
-
-                    let mut channel = sess.channel_session().unwrap();
-                    channel.exec(&cmd).unwrap();
-                    let mut s = String::new();
-                    channel.read_to_string(&mut s).unwrap();
-                    println!("{}", s);
-                    channel.wait_close().expect("failed to close ssh channel");
-                    println!("{}", channel.exit_status().unwrap());
-                    */
 
                     return "control".to_string()
                 }

@@ -3,6 +3,7 @@ use std::env;
 use std::path::Path;
 
 use std::fs::File;
+use std::process::Command;
 use std::io::Read;
 use serde::{Serialize, Deserialize};
 
@@ -41,6 +42,11 @@ pub fn missing_packages() -> Vec<String> {
         missing.push("qemu-src".to_string());
     }
 
+    // check if qemu libraries exists
+    let qemu_lib_tar_xz = format!("{}/lib", install_dir().as_str());
+    if !Path::new(&qemu_lib_tar_xz).exists() {
+        missing.push("qemu-lib".to_string());
+    }
     return missing;
 }
 
@@ -53,17 +59,77 @@ pub fn load_page(packages: Vec<String>) -> String {
 
     // If qemu pid file doesn't exist
     if packages.len() == 0 {
+        make_symlink();
         "launcher".to_string()
-    } else if packages.len() == 3 {
+    } else if packages.len() == 4 {
         "install".to_string()
     } else if packages.len() == 1 {
         if packages.get(0).unwrap().to_string() == "qemu-src" {
+            make_symlink();
             "launcher".to_string()
         } else {
             "fix".to_string()
         }
     } else {
         "fix".to_string()
+    }
+}
+
+fn make_symlink() {
+    // pixman
+    let pixman_file = "/usr/local/opt/pixman/lib/libpixman-1.0.dylib";
+    let pixman_src = format!("{}/lib/pixman", install_dir().as_str());
+    let pixman_dest = "/usr/local/opt/pixman";
+
+    if !Path::new(&pixman_file).exists() {
+        let _ = Command::new("ln")
+            .arg("-s")
+            .arg(pixman_src) 
+            .arg(pixman_dest)
+            .spawn()
+            .expect("failed to create pixman symlink");
+    }
+
+    // glib
+    let glib_file = "/usr/local/opt/glib/lib/libgio-2.0.0.dylib";
+    let glib_src = format!("{}/lib/glib", install_dir().as_str());
+    let glib_dest = "/usr/local/opt/glib";
+
+    if !Path::new(&glib_file).exists() {
+        let _ = Command::new("ln")
+            .arg("-s")
+            .arg(glib_src) 
+            .arg(glib_dest)
+            .spawn()
+            .expect("failed to create glib symlink");
+    }
+
+    // libslirp
+    let libslirp_file = "/usr/local/opt/libslirp/lib/libslirp.0.dylib";
+    let libslirp_src = format!("{}/lib/libslirp", install_dir().as_str());
+    let libslirp_dest = "/usr/local/opt/libslirp";
+
+    if !Path::new(&libslirp_file).exists() {
+        let _ = Command::new("ln")
+            .arg("-s")
+            .arg(libslirp_src) 
+            .arg(libslirp_dest)
+            .spawn()
+            .expect("failed to create libslirp symlink");
+    }
+
+    // libssh
+    let libssh_file = "/usr/local/opt/libssh/lib/libssh.4.dylib";
+    let libssh_src = format!("{}/lib/libssh", install_dir().as_str());
+    let libssh_dest = "/usr/local/opt/libssh";
+
+    if !Path::new(&libssh_file).exists() {
+        let _ = Command::new("ln")
+            .arg("-s")
+            .arg(libssh_src) 
+            .arg(libssh_dest)
+            .spawn()
+            .expect("failed to create libssh symlink");
     }
 }
 
