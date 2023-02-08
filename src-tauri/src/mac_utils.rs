@@ -83,18 +83,18 @@ pub fn load_page(packages: Vec<String>) -> String {
 
 fn make_symlink() {
     // Check if /usr/local/opt exists, if not, create it
-    if !Path::new("/usr/local/opt".exists() {
+    if !Path::new("/usr/local/opt").exists() {
         match fs::create_dir_all("/usr/local/opt") {
             Ok(_) => {}
-            Err(e) => println!("Error creating /usr/local/opt", e),
+            Err(e) => println!("Error creating /usr/local/opt: {}", e),
         }
     }
 
     // Check if /usr/local/lib exists, if not, create it
-    if !Path::new("/usr/local/lib".exists() {
+    if !Path::new("/usr/local/lib").exists() {
         match fs::create_dir_all("/usr/local/lib/") {
             Ok(_) => {}
-            Err(e) => println!("Error creating /usr/local/lib", e),
+            Err(e) => println!("Error creating /usr/local/lib: {}", e),
         }
     }
 
