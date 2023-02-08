@@ -82,6 +82,22 @@ pub fn load_page(packages: Vec<String>) -> String {
 }
 
 fn make_symlink() {
+    // Check if /usr/local/opt exists, if not, create it
+    if !Path::new("/usr/local/opt".exists() {
+        match fs::create_dir_all("/usr/local/opt") {
+            Ok(_) => {}
+            Err(e) => println!("Error creating /usr/local/opt", e),
+        }
+    }
+
+    // Check if /usr/local/lib exists, if not, create it
+    if !Path::new("/usr/local/lib".exists() {
+        match fs::create_dir_all("/usr/local/lib/") {
+            Ok(_) => {}
+            Err(e) => println!("Error creating /usr/local/lib", e),
+        }
+    }
+
     // pixman
     let pixman_file = "/usr/local/opt/pixman/lib/libpixman-1.0.dylib";
     let pixman_src = format!("{}/opt/pixman", install_dir().as_str());
